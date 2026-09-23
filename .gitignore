@@ -1,0 +1,83 @@
+# Node modules
+/node_modules
+
+# Compilation output
+/dist
+
+# pnpm deploy output
+/bundle
+
+# Hardhat Build Artifacts
+/artifacts
+
+# Hardhat compilation (v2) support directory
+/cache
+
+# Typechain output
+/types
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Hardhat coverage reports
+/coverage
+
+# Gas snapshot files
+/.gas-snapshot
+
+# Snapshot cheatcodes output
+/snapshots
+
+# Dependencies
+node_modules/
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# Hardhat / Solidity build artifacts
+artifacts/
+cache/
+coverage/
+
+# TypeScript
+*.tsbuildinfo
+
+# Test / coverage output
+coverage/
+.nyc_output/
+
+# Generated Hardhat files
+typechain-types/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs / editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local blockchain / deployment data
+# Uncomment if you don't want local deployment data committed
+# deployments/
+
+# Hardhat Ignition
+# Uncomment if you want to ignore generated Ignition deployment data
+# ignition/deployments/
+
+# Temporary files
+.tmp/
+temp/

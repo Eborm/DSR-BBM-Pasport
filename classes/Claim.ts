@@ -5,10 +5,10 @@ export class Claim {
     batchId : Int32Array;
     submitterId : Int32Array;
     documentHash : string;
-    timestamp : BigInteger;
+    timestamp : BigInt64Array;
     claimType : ClaimType;
 
-    constructor(batchId: Int32Array, submitterId : Int32Array, documentHash : string, timestamp: BigInteger, claimType: ClaimType) {
+    constructor(batchId: Int32Array, submitterId : Int32Array, documentHash : string, timestamp: BigInt64Array, claimType: ClaimType) {
         this.batchId = batchId;
         this.submitterId = submitterId;
         this.documentHash = documentHash; //Hash before calling constructor or add in a hashing function in he constructer 

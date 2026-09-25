@@ -1,5 +1,5 @@
-import { ClaimType } from "../enums/ClaimType";
-import { Batch } from "./Batch"
+import { ClaimType } from "../enums/ClaimType.js";
+import { Batch } from "./Batch.js"
 
 export class Claim {
     batchId : Int32Array;

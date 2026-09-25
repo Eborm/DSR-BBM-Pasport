@@ -1,7 +1,7 @@
-import { Classification} from "../enums/Classification";
-import { MaterialType } from "../enums/MaterialType";
-import { SourceFile } from "../enums/SourceFile";
-import { User } from "./User";
+import { Classification} from "../enums/Classification.js";
+import { MaterialType } from "../enums/MaterialType.js";
+import { SourceFile } from "../enums/SourceFile.js";
+import { User } from "./User.js";
 
 export class Batch {
     id: Int32Array;

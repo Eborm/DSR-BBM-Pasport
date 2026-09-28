@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Toetsingsrapport BBM-paspoort</title>
+<style>
+  :root {
+    --tekst: #1d2521; --stil: #4f5b55; --lijn: #d5dcd8; --vlak: #f4f7f5; --grond: #ffffff;
+    --accent: #1f5f8b; --ok: #1e6b3a; --ok-vlak: #e6f2ea; --fout: #a32121; --fout-vlak: #fbeaea;
+    --neutraal: #545b58; --neutraal-vlak: #eceeed;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--grond); color: var(--tekst);
+    font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 60rem; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+  h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 .25rem; }
+  h2 { font-size: 1.3rem; margin: 2.75rem 0 .75rem; padding-bottom: .35rem; border-bottom: 2px solid var(--tekst); }
+  h3 { font-size: 1.1rem; margin: 0 0 .4rem; }
+  h4 { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--stil); margin: 1rem 0 .25rem; }
+  a { color: var(--accent); }
+  code, pre { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: .88em; }
+  .ondertitel { color: var(--stil); margin: 0 0 1.5rem; }
+  .meta { display: grid; grid-template-columns: max-content 1fr; gap: .2rem 1rem; margin: 0; padding: 1rem 1.25rem;
+    background: var(--vlak); border-radius: 6px; }
+  .meta dt { color: var(--stil); } .meta dd { margin: 0; }
+  .waarschuwing { color: var(--fout); }
+  .kerncijfers { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: .75rem; margin: 1.25rem 0; }
+  .kerncijfer { border: 1px solid var(--lijn); border-radius: 6px; padding: .75rem 1rem; }
+  .kerncijfer strong { display: block; font-size: 1.6rem; font-variant-numeric: tabular-nums; }
+  .kerncijfer span { color: var(--stil); font-size: .88rem; }
+  .tabel { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .93rem; }
+  th, td { text-align: left; padding: .45rem .6rem; border-bottom: 1px solid var(--lijn); vertical-align: top; }
+  th { font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; color: var(--stil); font-weight: 600; }
+  .getal { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .stil { color: var(--stil); }
+  .status { display: inline-flex; gap: .3rem; align-items: baseline; font-weight: 600; white-space: nowrap; }
+  .status.ok { color: var(--ok); } .status.fout { color: var(--fout); } .status.neutraal { color: var(--neutraal); }
+  .labels { display: flex; flex-wrap: wrap; gap: .75rem; align-items: baseline; margin: 0 0 .75rem; }
+  .niveau { font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; border: 1px solid var(--lijn);
+    border-radius: 3px; padding: .05rem .45rem; }
+  .requirement { border: 1px solid var(--lijn); border-radius: 6px; padding: 1.25rem 1.25rem .75rem; margin: 0 0 1rem;
+    break-inside: avoid; }
+  .requirement dl { display: grid; grid-template-columns: 9rem 1fr; gap: .3rem 1rem; margin: 0 0 .5rem; }
+  .requirement dt { color: var(--stil); } .requirement dd { margin: 0; }
+  ul.tests { list-style: none; margin: 0 0 .5rem; padding: 0; }
+  li.test { display: grid; grid-template-columns: 1.4rem 1fr; padding: .2rem 0; }
+  .melding { grid-column: 2; margin: .35rem 0 .25rem; padding: .6rem .75rem; background: var(--fout-vlak);
+    color: var(--fout); border-radius: 4px; white-space: pre-wrap; overflow-x: auto; }
+  .niveaus dt { font-weight: 600; } .niveaus dd { margin: 0 0 .5rem; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  footer { margin-top: 3rem; color: var(--stil); font-size: .88rem; }
+  @media (max-width: 36rem) { .requirement dl, .meta { grid-template-columns: 1fr; } .requirement dt { margin-top: .4rem; } }
+  @media print { main { padding: 0; } a { color: inherit; text-decoration: none; } h2 { break-after: avoid; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Toetsingsrapport BBM-paspoort</h1>
+  <p class="ondertitel">Proof of Concept · CEL4LIFE · Zuyd Hogeschool</p>
+
+  <dl class="meta">
+    <dt>Gegenereerd</dt><dd>28 september 2026 om 11:53</dd>
+    <dt>Codeversie</dt><dd><code>1f47b41</code></dd>
+    <dt>Reproduceren</dt><dd><code>npm install</code> en daarna <code>npm run rapport</code></dd>
+  </dl>
+
+  <h2>Samenvatting</h2>
+  <div class="kerncijfers">
+    <div class="kerncijfer"><strong>5 van 8</strong><span>requirements met alle tests geslaagd</span></div>
+    <div class="kerncijfer"><strong>46</strong><span>tests geslaagd</span></div>
+    <div class="kerncijfer"><strong>0</strong><span>tests mislukt</span></div>
+    <div class="kerncijfer"><strong>3</strong><span>tests nog niet gebouwd</span></div>
+    <div class="kerncijfer"><strong>100,0%</strong><span>van de contractcode door tests uitgevoerd</span></div>
+  </div>
+  <div class="tabel"><table>
+    <thead><tr><th>Req.</th><th>Requirement</th><th>Niveau</th><th>Status</th><th>Tests</th></tr></thead>
+    <tbody><tr>
+        <td><a href="#R1">R1</a></td>
+        <td>Unieke identificatie en traceerbaarheid</td>
+        <td>Aangetoond</td>
+        <td><span class="status ok"><span aria-hidden="true">✔</span> Alle tests geslaagd</span></td>
+        <td class="stil">6 geslaagd</td>
+      </tr>
+<tr>
+        <td><a href="#R2">R2</a></td>
+        <td>Gestandaardiseerde materiaal- en productdata</td>
+        <td>Aangetoond</td>
+        <td><span class="status ok"><span aria-hidden="true">✔</span> Alle tests geslaagd</span></td>
+        <td class="stil">7 geslaagd</td>
+      </tr>
+<tr>
+        <td><a href="#R3">R3</a></td>
+        <td>Circulariteits- en milieu-informatie</td>
+        <td>Gedemonstreerd</td>
+        <td><span class="status neutraal"><span aria-hidden="true">○</span> Nog niet getoetst</span></td>
+        <td class="stil">1 nog niet gebouwd</td>
+      </tr>
+<tr>
+        <td><a href="#R4">R4</a></td>
+        <td>Interoperabiliteit en open standaarden</td>
+        <td>Gedemonstreerd</td>
+        <td><span class="status neutraal"><span aria-hidden="true">◐</span> Gedeeltelijk getoetst</span></td>
+        <td class="stil">2 geslaagd · 1 nog niet gebouwd</td>
+      </tr>
+<tr>
+        <td><a href="#R5">R5</a></td>
+        <td>Betrouwbaarheid, herkomst en integriteit</td>
+        <td>Aangetoond</td>
+        <td><span class="status ok"><span aria-hidden="true">✔</span> Alle tests geslaagd</span></td>
+        <td class="stil">6 geslaagd</td>
+      </tr>
+<tr>
+        <td><a href="#R6">R6</a></td>
+        <td>Datagovernance en toegangsrechten</td>
+        <td>Aangetoond</td>
+        <td><span class="status ok"><span aria-hidden="true">✔</span> Alle tests geslaagd</span></td>
+        <td class="stil">21 geslaagd</td>
+      </tr>
+<tr>
+        <td><a href="#R7">R7</a></td>
+        <td>Levenscyclus en actualiseerbaarheid</td>
+        <td>Gedemonstreerd</td>
+        <td><span class="status ok"><span aria-hidden="true">✔</span> Alle tests geslaagd</span></td>
+        <td class="stil">3 geslaagd</td>
+      </tr>
+<tr>
+        <td><a href="#R8">R8</a></td>
+        <td>Praktische toepasbaarheid</td>
+        <td>Deels buiten bereik</td>
+        <td><span class="status neutraal"><span aria-hidden="true">◐</span> Gedeeltelijk getoetst</span></td>
+        <td class="stil">1 geslaagd · 1 nog niet gebouwd</td>
+      </tr></tbody>
+  </table></div>
+
+  <h2>Toetsingsniveaus</h2>
+  <p>Niet elk requirement is even hard te toetsen. Per requirement staat vooraf vast op welk niveau het wordt getoetst.</p>
+  <dl class="niveaus">
+    <dt>Aangetoond</dt><dd>Binair te testen: de test slaagt of faalt.</dd>
+<dt>Gedemonstreerd</dt><dd>Zichtbaar gemaakt, maar niet bewezen over de volle levensduur.</dd>
+<dt>Deels buiten bereik</dt><dd>Niet volledig te bewijzen zonder echte gebruikers; gemeten wat meetbaar is.</dd>
+  </dl>
+
+  <h2>Per requirement</h2>
+  <section class="requirement" id="R1">
+      <h3>R1 · Unieke identificatie en traceerbaarheid</h3>
+      <p class="labels"><span class="niveau">Aangetoond</span> <span class="status ok"><span aria-hidden="true">✔</span> Alle tests geslaagd</span></p>
+      <dl>
+        <dt>Requirement</dt><dd>Elk materiaal krijgt een eigen ID; eigenaarschap, locatie en levenscyclusgebeurtenissen zijn volgbaar.</dd>
+        <dt>Toetscriterium</dt><dd>Elke batch krijgt een uniek oplopend ID; opvragen van een onbekend ID geeft UnknownBatch.</dd>
+        
+        <dt>Testbestand</dt><dd><code>test/R1-identificatie.ts</code></dd>
+      </dl>
+      <ul class="tests"><li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>kent elke nieuwe batch een uniek, oplopend ID toe, beginnend bij 1</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>weigert het opvragen van een onbekend ID met UnknownBatch</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>geeft een afgesplitste batch een eigen ID dat terugverwijst naar de oorsprong</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>volgt de huidige eigenaar en legt elke overdracht vast op de tijdlijn</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>weigert het nuladres als nieuwe eigenaar, want dan is de batch niet meer te volgen</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>houdt de hoeveelheid kloppend: overdragen gaat per hele batch, splitsen alleen met een deel</span></li></ul>
+    </section>
+<section class="requirement" id="R2">
+      <h3>R2 · Gestandaardiseerde materiaal- en productdata</h3>
+      <p class="labels"><span class="niveau">Aangetoond</span> <span class="status ok"><span aria-hidden="true">✔</span> Alle tests geslaagd</span></p>
+      <dl>
+        <dt>Requirement</dt><dd>Samenstelling, hoeveelheid, herkomst, producent, technische eigenschappen, levensduur en demontage-informatie.</dd>
+        <dt>Toetscriterium</dt><dd>Alle kernvelden komen terug zoals ingevoerd; lege materiaalsoort en hoeveelheid nul worden geweigerd.</dd>
+        <dt>Beperking</dt><dd>Getoetst zijn de kernvelden op de keten. De uitgebreide productdata staat in het paspoortdocument buiten de keten.</dd>
+        <dt>Testbestand</dt><dd><code>test/R2-data.ts</code></dd>
+      </dl>
+      <ul class="tests"><li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>geeft alle kernvelden terug zoals ingevoerd</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>accepteert elke materiaalsoort als vrije tekst, zonder het contract opnieuw uit te rollen</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>weigert een lege materiaalsoort</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>weigert hoeveelheid nul</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>weigert een lege eenheid</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>weigert een niveau buiten RawMaterial, Product, Component en BuildingElement</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>eist een documenthash zodra er een paspoortdocument is opgegeven</span></li></ul>
+    </section>
+<section class="requirement" id="R3">
+      <h3>R3 · Circulariteits- en milieu-informatie</h3>
+      <p class="labels"><span class="niveau">Gedemonstreerd</span> <span class="status neutraal"><span aria-hidden="true">○</span> Nog niet getoetst</span></p>
+      <dl>
+        <dt>Requirement</dt><dd>Herbruikbaarheid, recyclebaarheid, reparatie, restwaarde, CO₂-impact en mogelijke volgende toepassingen.</dd>
+        <dt>Toetscriterium</dt><dd>Uit het paspoortdocument is een circulariteitsindicatie af te leiden en te tonen.</dd>
+        
+        <dt>Testbestand</dt><dd><code>test/R3-circulariteit.ts</code></dd>
+      </dl>
+      <ul class="tests"><li class="test"><span class="status neutraal" title="nog niet gebouwd"><span aria-hidden="true">○</span></span> <span>leidt uit het paspoortdocument een circulariteitsindicatie af en toont die <em class="stil">(nog niet gebouwd)</em></span></li></ul>
+    </section>
+<section class="requirement" id="R4">
+      <h3>R4 · Interoperabiliteit en open standaarden</h3>
+      <p class="labels"><span class="niveau">Gedemonstreerd</span> <span class="status neutraal"><span aria-hidden="true">◐</span> Gedeeltelijk getoetst</span></p>
+      <dl>
+        <dt>Requirement</dt><dd>Uitwisseling via open standaarden en API's; interoperabel en machineleesbaar.</dd>
+        <dt>Toetscriterium</dt><dd>De JSON-LD export valideert tegen het schema.</dd>
+        
+        <dt>Testbestand</dt><dd><code>test/R4-interoperabiliteit.ts</code></dd>
+      </dl>
+      <ul class="tests"><li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>implementeert de open tokenstandaard ERC-1155, inclusief metadata-URI</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>verwijst via de standaardfunctie uri() naar het paspoortdocument van de batch</span></li>
+<li class="test"><span class="status neutraal" title="nog niet gebouwd"><span aria-hidden="true">○</span></span> <span>de JSON-LD export valideert tegen het schema <em class="stil">(nog niet gebouwd)</em></span></li></ul>
+    </section>
+<section class="requirement" id="R5">
+      <h3>R5 · Betrouwbaarheid, herkomst en integriteit</h3>
+      <p class="labels"><span class="niveau">Aangetoond</span> <span class="status ok"><span aria-hidden="true">✔</span> Alle tests geslaagd</span></p>
+      <dl>
+        <dt>Requirement</dt><dd>Vastleggen wie welke informatie wanneer heeft toegevoegd, inclusief bewijs.</dd>
+        <dt>Toetscriterium</dt><dd>Een gewijzigd document laat de hashcontrole falen.</dd>
+        <dt>Beperking</dt><dd>De hashcontrole is getoetst op documentinhoud in het geheugen; de koppeling met de documentopslag volgt nog.</dd>
+        <dt>Testbestand</dt><dd><code>test/R5-integriteit.ts</code></dd>
+      </dl>
+      <ul class="tests"><li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>legt bij elke claim vast wie hem indiende, wanneer, en de hash van het document</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>laat de hashcontrole falen zodra één byte van het document is gewijzigd</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>weigert een claim zonder documenthash of zonder documentverwijzing</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>bewaart tegenstrijdige keuringen naast elkaar, elk met eigen afzender</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>staat niet toe dat iemand via een claim een registratie, overdracht of splitsing veinst</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>heeft geen enkele functie waarmee historie kan worden gewijzigd of verwijderd</span></li></ul>
+    </section>
+<section class="requirement" id="R6">
+      <h3>R6 · Datagovernance en toegangsrechten</h3>
+      <p class="labels"><span class="niveau">Aangetoond</span> <span class="status ok"><span aria-hidden="true">✔</span> Alle tests geslaagd</span></p>
+      <dl>
+        <dt>Requirement</dt><dd>Wie mag lezen, toevoegen en wijzigen. Bedrijfsgevoelige data hoeft niet publiek te zijn.</dd>
+        <dt>Toetscriterium</dt><dd>Per rol: toegestane actie slaagt, verboden actie wordt geweigerd.</dd>
+        <dt>Beperking</dt><dd>Toegangsrechten gelden voor schrijven op de keten. Documenten buiten de keten zijn in de PoC voor iedereen met de URI leesbaar.</dd>
+        <dt>Testbestand</dt><dd><code>test/R6-toegangsrechten.ts</code></dd>
+      </dl>
+      <h4>zonder rol</h4><ul class="tests"><li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>mag alle batches en de volledige tijdlijn lezen</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>mag niets schrijven: registreren, claimen, overdragen en splitsen worden geweigerd</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>kan geen batch ontvangen, want dan kan niemand hem nog overdragen of splitsen</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>mag zichzelf geen rol toekennen</span></li></ul>
+<h4>MANUFACTURER</h4><ul class="tests"><li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>mag batches aanmaken</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>mag een eigen batch overdragen</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>mag een batch van een ander niet overdragen</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>mag geen keuring toevoegen</span></li></ul>
+<h4>INSPECTOR</h4><ul class="tests"><li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>mag een keuring toevoegen aan elke batch, ongeacht de eigenaar</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>mag geen eigenaar worden</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>mag ook als fabrikant geen batch aanmaken, want dan wordt hij eigenaar</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>mag geen plaatsing claimen</span></li></ul>
+<h4>OWNER</h4><ul class="tests"><li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>mag locatie en status claimen op een eigen batch</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>mag niet claimen op een batch van een ander</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>mag een eigen batch overdragen en splitsen</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>mag een batch van een ander niet splitsen</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>mag geen batches aanmaken</span></li></ul>
+<h4>DEMOLISHER</h4><ul class="tests"><li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>mag de conditie bij demontage claimen</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>mag geen keuring toevoegen en geen batches aanmaken</span></li></ul>
+<h4>omzeilen</h4><ul class="tests"><li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>een directe ERC-1155-overdracht buiten de rolcontrole om wordt geweigerd</span></li></ul>
+<h4>beheer</h4><ul class="tests"><li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>het contract kan niet zonder beheerder worden uitgerold, anders kan niemand rollen toekennen</span></li></ul>
+    </section>
+<section class="requirement" id="R7">
+      <h3>R7 · Levenscyclus en actualiseerbaarheid</h3>
+      <p class="labels"><span class="niveau">Gedemonstreerd</span> <span class="status ok"><span aria-hidden="true">✔</span> Alle tests geslaagd</span></p>
+      <dl>
+        <dt>Requirement</dt><dd>Het paspoort groeit mee: productie, levering, toepassing, onderhoud, demontage, hergebruik en recycling.</dd>
+        <dt>Toetscriterium</dt><dd>Een batch doorloopt registratie, keuring, plaatsing, splitsing, demontage en hergebruik; alle regels blijven zichtbaar.</dd>
+        <dt>Beperking</dt><dd>De levenscyclus 2018–2044 is gesimuleerd op een lokale keten, niet over de werkelijke levensduur.</dd>
+        <dt>Testbestand</dt><dd><code>test/R7-levenscyclus.ts</code></dd>
+      </dl>
+      <ul class="tests"><li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>doorloopt registratie, plaatsing, demontage, keuring, splitsing en hergebruik; alle regels blijven zichtbaar</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>laat de historie van vóór de splitsing geldig voor beide takken</span></li>
+<li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>voegt een correctie toe als nieuwe regel, zonder de oude te overschrijven</span></li></ul>
+    </section>
+<section class="requirement" id="R8">
+      <h3>R8 · Praktische toepasbaarheid</h3>
+      <p class="labels"><span class="niveau">Deels buiten bereik</span> <span class="status neutraal"><span aria-hidden="true">◐</span> Gedeeltelijk getoetst</span></p>
+      <dl>
+        <dt>Requirement</dt><dd>Lage administratieve last, eenvoudige invoer, aansluiting op bestaande werkprocessen.</dd>
+        <dt>Toetscriterium</dt><dd>Registreren kost niet meer dan een vastgesteld aantal handelingen; meet en rapporteer dat.</dd>
+        <dt>Beperking</dt><dd>Gebruiksgemak is zonder echte aannemers, slopers en fabrikanten niet volledig te bewijzen.</dd>
+        <dt>Testbestand</dt><dd><code>test/R8-toepasbaarheid.ts</code></dd>
+      </dl>
+      <ul class="tests"><li class="test"><span class="status ok" title="geslaagd"><span aria-hidden="true">✔</span><span class="sr">geslaagd:</span></span> <span>registreren lukt in één transactie met alleen de vier verplichte velden</span></li>
+<li class="test"><span class="status neutraal" title="nog niet gebouwd"><span aria-hidden="true">○</span></span> <span>registreren in de app kost niet meer dan het vastgestelde aantal handelingen <em class="stil">(nog niet gebouwd)</em></span></li></ul>
+    </section>
+  
+
+  <h2>Contractdekking</h2>
+  <p>Aandeel van de regels in het smart contract dat minstens één keer door een test is uitgevoerd. Volledige dekking
+  betekent dat elke regel is uitgevoerd, niet dat elk denkbaar geval is getest.</p>
+  <div class="tabel"><table>
+    <thead><tr><th>Bestand</th><th class="getal">Regels</th><th class="getal">Dekking</th></tr></thead>
+    <tbody><tr><td><code>contracts/MaterialPassport.sol</code></td><td class="getal">84 / 84</td><td class="getal">100,0%</td></tr></tbody>
+  </table></div>
+
+  <footer>
+    Dit rapport is automatisch gegenereerd uit de testsuite (<code>test/</code>) en de requirements
+    (<code>test/helpers/requirements.ts</code>). Wijzigingen in dit bestand gaan bij de volgende run verloren.
+  </footer>
+</main>
+</body>
+</html>

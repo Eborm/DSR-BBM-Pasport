@@ -94,3 +94,9 @@ Thumbs.db
 # Temporary files
 .tmp/
 temp/
+
+# Tussenresultaten van het toetsingsrapport
+/rapport/.resultaten
+
+# Ignition-deployments op de lokale wegwerpketen
+ignition/deployments/chain-31337/

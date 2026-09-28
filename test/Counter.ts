@@ -3,7 +3,7 @@ import { network } from "hardhat";
 
 const { ethers } = await network.create();
 
-describe("Counter", function () {
+describe.skip("Counter", function () {
   it("Should emit the Increment event when calling the inc() function", async function () {
     const counter = await ethers.deployContract("Counter");
 

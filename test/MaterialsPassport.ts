@@ -1,24 +1,26 @@
 import { expect } from "chai";
 import { network } from "hardhat";
-import { Classification } from "../enums/Classification.js";
-import { MaterialType } from "../enums/MaterialType.js";
-import { SourceFile } from "../enums/SourceFile.js";
 
 const { ethers } = await network.create();
 
-describe("BatchRegistry", function () {
+const Level = { RawMaterial: 0, Product: 1, Component: 2, BuildingElement: 3 };
+const ClassificationEnum = { A1: 0, A2: 1, B: 2, C: 3, D: 4, E: 5, F: 6 };
+const SourceFileEnum = { Bim: 0, InspectionReport: 1, DemolitionInventory: 2 };
+
+describe("MaterialPassport", function () {
   it("registers a batch and stores the given values", async function () {
-    const registry = await ethers.deployContract("BatchRegistry");
+    const registry = await ethers.deployContract("MaterialPassport");
 
     // 1. execute registerBatch with testvalues
     const transaction = await registry.registerBatch(
       "Test Producer",
-      Classification.A1,
-      MaterialType.Wood,
+      ClassificationEnum.A1,
+      "Wood",
+      Level.RawMaterial,
       1000n,
       "Test Origin",
       1638364800n,
-      SourceFile.Bim
+      SourceFileEnum.Bim
     );
     await transaction.wait();
     
@@ -28,26 +30,27 @@ describe("BatchRegistry", function () {
 
     // 3. check with expect(...).to.equal(...)
     expect(batch.producer).to.equal("Test Producer");
-    expect(batch.classification).to.equal(Classification.A1);
-    expect(batch.materialType).to.equal(MaterialType.Wood);
+    expect(batch.classification).to.equal(ClassificationEnum.A1);
+    expect(batch.materialType).to.equal("Wood");
     expect(batch.mass).to.equal(1000n);
     expect(batch.origin).to.equal("Test Origin");
-    expect(batch.installationDate).to.equal(1638364800n);
+    expect(batch.productionDate).to.equal(1638364800n);
   });
 
   it("The autoimplemented fields should be set correctly", async function () {
-    const registry = await ethers.deployContract("BatchRegistry");
+    const registry = await ethers.deployContract("MaterialPassport");
     const [owner] = await ethers.getSigners();
 
     // Register batch
     const transaction = await registry.registerBatch(
       "Test Producer",
-      Classification.A1,
-      MaterialType.Wood,
+      ClassificationEnum.A1,
+      "Wood",
+      Level.RawMaterial,
       1000n,
       "Test Origin",
       1638364800n,
-      SourceFile.Bim
+      SourceFileEnum.Bim
     );
     await transaction.wait();
 
@@ -62,17 +65,18 @@ describe("BatchRegistry", function () {
   });
 
   it("The event should be emitted when a batch is registered", async function () {
-    const registry = await ethers.deployContract("BatchRegistry");
+    const registry = await ethers.deployContract("MaterialPassport");
 
     // Register batch
     const transaction = await registry.registerBatch(
       "Test Producer",
-      Classification.A1,
-      MaterialType.Wood,
+      ClassificationEnum.A1,
+      "Wood",
+      Level.RawMaterial,
       1000n,
       "Test Origin",
       1638364800n,
-      SourceFile.Bim
+      SourceFileEnum.Bim
     );
     await transaction.wait();
 
@@ -85,17 +89,18 @@ describe("BatchRegistry", function () {
   });
 
   it("A second batch should have a different id than the first batch", async function () {
-    const registry = await ethers.deployContract("BatchRegistry");
+    const registry = await ethers.deployContract("MaterialPassport");
 
     // Register first batch
     const transaction1 = await registry.registerBatch(
       "Test Producer 1",
-      Classification.A1,
-      MaterialType.Wood,
+      ClassificationEnum.A1,
+      "Wood",
+      Level.RawMaterial,
       1000n,
       "Test Origin 1",
       1638364800n,
-      SourceFile.Bim
+      SourceFileEnum.Bim
     );
     await transaction1.wait();
 
@@ -106,12 +111,13 @@ describe("BatchRegistry", function () {
     // Register second batch
     const transaction2 = await registry.registerBatch(
       "Test Producer 2",
-      Classification.A2,
-      MaterialType.Metal,
+      ClassificationEnum.A2,
+      "Metal",
+      Level.RawMaterial,
       2000n,
       "Test Origin 2",
       1638364800n,
-      SourceFile.Bim
+      SourceFileEnum.Bim
     );
     await transaction2.wait();
 

@@ -6,7 +6,12 @@
     "build": "hardhat build",
     "test": "hardhat test",
     "rapport": "hardhat run scripts/toetsingsrapport.ts",
-    "typecheck": "hardhat build && tsc --noEmit"
+    "typecheck": "hardhat build && tsc --noEmit && tsc --noEmit -p app",
+    "demo": "hardhat build && node --import tsx scripts/start-demo.ts",
+    "demo:vervals": "hardhat run scripts/vervals-document.ts --network localhost",
+    "storage": "node --import tsx storage/server.ts",
+    "app": "vite --config app/vite.config.ts",
+    "app:build": "hardhat build && vite build --config app/vite.config.ts"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^4.1.0",
@@ -17,11 +22,21 @@
     "@types/chai-as-promised": "^8.0.2",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.20.4",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
     "chai": "^6.2.2",
     "ethers": "^6.17.0",
     "forge-std": "github:foundry-rs/forge-std#v1.16.2",
     "hardhat": "^3.17.0",
+    "jsqr": "^1.4.0",
     "mocha": "^11.0.0",
-    "typescript": "~6.0.3"
+    "qrcode": "^1.5.4",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.1"
   }
 }

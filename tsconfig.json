@@ -7,5 +7,6 @@
     "outDir": "dist",
     "types": ["node", "mocha"],
     "verbatimModuleSyntax": true
-  }
+  },
+  "exclude": ["app", "node_modules", "dist", "artifacts", "cache", "coverage"]
 }

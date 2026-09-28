@@ -100,3 +100,9 @@ temp/
 
 # Ignition-deployments op de lokale wegwerpketen
 ignition/deployments/chain-31337/
+
+# Demo: lokale opslag, gegenereerde documenten en deployment, logboeken
+/storage/data
+/demo
+/app/public/deployment.json
+/.demo

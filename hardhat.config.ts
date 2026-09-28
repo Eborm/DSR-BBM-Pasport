@@ -32,4 +32,18 @@ export default defineConfig({
       },
     },
   },
+  networks: {
+    // Lokale keten voor de demo (`npm run demo`). Begint in 2018, zodat de
+    // casus uit SPEC §10 met realistische datums op de tijdlijn komt.
+    demo: {
+      type: "edr-simulated",
+      chainType: "l1",
+      initialDate: "2018-03-01T09:00:00Z",
+    },
+    localhost: {
+      type: "http",
+      chainType: "l1",
+      url: "http://127.0.0.1:8545",
+    },
+  },
 });

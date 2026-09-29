@@ -60,6 +60,8 @@ contract MaterialPassport {
         uint256 _productionDate,
         SourceFile _sourceFile
     ) public returns (uint256) {
+        _validateBatchInput(_producer, _materialType, _mass, _origin, _productionDate);
+
         batchCount++;
         uint256 _id = batchCount;
         address _currentOwner = msg.sender;
@@ -81,5 +83,19 @@ contract MaterialPassport {
 
         emit BatchRegistered(_id, _currentOwner, _registeredAt);
         return _id;
+    }
+
+    function _validateBatchInput(
+        string memory _producer,
+        string memory _materialType,
+        uint256 _mass,
+        string memory _origin,
+        uint256 _productionDate
+    ) private view {
+        require(bytes(_producer).length > 0, "Producer cannot be empty");
+        require(bytes(_materialType).length > 0, "Material type cannot be empty");
+        require(bytes(_origin).length > 0, "Origin cannot be empty");
+        require(_mass > 0, "Mass must be greater than zero");
+        require(_productionDate <= block.timestamp, "Production date cannot be in the future");
     }
 }

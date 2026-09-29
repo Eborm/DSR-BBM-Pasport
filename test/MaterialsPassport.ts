@@ -129,5 +129,13 @@ describe("MaterialPassport", function () {
     expect(batch1.id).to.not.equal(batch2.id);
   });
 
+  it("Should not register a batch with invalid input", async function () {
+    const registry = await ethers.deployContract("MaterialPassport");
+
+    await expect(
+      registry.registerBatch("", ClassificationEnum.A1, "Wood", Level.Product, 1000n, "Test Origin", 1638364800n, SourceFileEnum.Bim)
+    ).to.be.revertedWith("Producer cannot be empty");
+  });
+
   // TODO: Add test to check if user has correct permissions to register a batch. This will require implementing a permission system in the BatchRegistry contract.
 });

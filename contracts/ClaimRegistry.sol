@@ -17,7 +17,7 @@ contract ClaimRegistry {
     //Storage
     address public admin;
     mapping(address => Role) public roles;
-    mapping(unit256 => Claim[]) private claimByBatch;
+    mapping(uint256 => Claim[]) private claimsByBatch;
     //Events and error handeling
     event ClaimAdded(
         uint256 indexed batchId,
@@ -25,7 +25,7 @@ contract ClaimRegistry {
         address indexed submitter,
         ClaimType claimType,
         bytes32 documentHash
-    )
+    );
 
     error NotAdmin();
     error NotAllowed(address account, ClaimType claimType);
@@ -37,7 +37,7 @@ contract ClaimRegistry {
     }
 
     function setRole(address account, Role role) external {
-        if (msg,sender != admin) revert NotAdmin();
+        if (msg.sender != admin) revert NotAdmin();
         roles[account] = role;
     }
 
@@ -52,7 +52,7 @@ contract ClaimRegistry {
             revert NotAllowed(msg.sender, claimType);
         }
 
-        claimIndex = claimBybatch[batchId].length;
+        claimIndex = claimsByBatch[batchId].length;
         claimsByBatch[batchId].push(
             Claim(batchId, msg.sender, documentHash, uint64(block.timestamp), claimType)
         );
@@ -65,13 +65,13 @@ contract ClaimRegistry {
     }
 
     function getClaimCount(uint256 batchId) external view returns (uint256) {
-        return claimsByBatch[batchId].length
+        return claimsByBatch[batchId].length;
     }
 
-    function _mayClaim(Role role, ClaimType, claimType) internal pure returns (bool) {
+    function _mayClaim(Role role, ClaimType claimType) internal pure returns (bool) {
         if (claimType == ClaimType.QualityDeclaration) return role == Role.Inspector;
         if (claimType == ClaimType.LocationChange) return role == Role.Owner;
 
-        return role = Role.Owner || role == Role.Demolisher;
+        return role == Role.Owner || role == Role.Demolisher;
     }
 }

@@ -11,6 +11,15 @@
 *.dll
 *.pdb
 
+# Frontend build output
+node_modules/
+artifacts/
+cache/
+types/
+.demo/
+app/public/deployment.json
+*.tsbuildinfo
+
 # Node modules
 /node_modules
 

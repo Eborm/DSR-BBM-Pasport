@@ -2,11 +2,13 @@
 pragma solidity ^0.8.34;
 
 contract MaterialPassport {
-    // Roles
-    bytes32 public constant MANUFACTURER = keccak256("MANUFACTURER");
-    bytes32 public constant INSPECTOR = keccak256("INSPECTOR");
-    bytes32 public constant OWNER = keccak256("OWNER");
-    bytes32 public constant DEMOLISHER = keccak256("DEMOLISHER");
+    enum Role { 
+        Viewer, 
+        Manufacturer, 
+        Inspector, 
+        Owner, 
+        Demolisher
+    }
 
     enum Classification {
         A1,
@@ -45,6 +47,27 @@ contract MaterialPassport {
         SourceFile sourceFile;
     }
 
+    mapping(address => Role) public roles;
+    address public admin;
+
+    constructor() {
+        admin = msg.sender;
+    }
+
+    modifier onlyRole(Role _role) {
+        require(roles[msg.sender] == _role, "Caller does not have the required role");
+        _;
+    }
+
+    modifier onlyAdmin() {
+        require(msg.sender == admin, "Only admin can assign roles");
+        _;
+    }
+
+    function assignRole(address _account, Role _role) public onlyAdmin {
+        roles[_account] = _role;
+    }
+
     mapping(uint256 => Batch) public batches;
     uint256 public batchCount;
 
@@ -59,7 +82,7 @@ contract MaterialPassport {
         string memory _origin,
         uint256 _productionDate,
         SourceFile _sourceFile
-    ) public returns (uint256) {
+    ) public onlyRole(Role.Manufacturer) returns (uint256) {
         _validateBatchInput(_producer, _materialType, _mass, _origin, _productionDate);
 
         batchCount++;

@@ -2,6 +2,9 @@
   "name": "DSR-BBM-Pasport",
   "version": "1.0.0",
   "type": "module",
+  "scripts": {
+    "demo": "tsx scripts/start-demo.ts"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^4.1.0",
     "@nomicfoundation/hardhat-ignition": "^3.1.8",
@@ -15,6 +18,15 @@
     "forge-std": "github:foundry-rs/forge-std#v1.16.2",
     "hardhat": "^3.17.0",
     "mocha": "^11.0.0",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tsx": "^4.19.2",
+    "vite": "^5.4.11"
   }
 }

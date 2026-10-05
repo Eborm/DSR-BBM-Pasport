@@ -1,11 +1,12 @@
 /**
- * Reading from and writing to the chain, matching Sven's MaterialPassport.sol.
- * This replaces the original, which used generated TypeChain types for the
- * team contract. Here we use a plain ethers.Contract with the ABI from
- * deployment.json, so no separate type-generation step is needed.
+ * Reading from and writing to the chain, matching Sven's MaterialPassport.sol
+ * and ClaimRegistry.sol. This replaces the original, which used generated
+ * TypeChain types for the team contract. Here we use plain ethers.Contract
+ * objects with the ABIs from deployment.json, so no separate type-generation
+ * step is needed.
  */
 import { Contract, JsonRpcProvider } from "ethers";
-import { Role, type Batch } from "./domain";
+import { ClaimRole, Role, type Batch, type Claim } from "./domain";
 
 export interface DemoAccount {
   name: string;
@@ -13,11 +14,20 @@ export interface DemoAccount {
   role: string;
 }
 
-/** Written by scripts/demo-data.ts on `npm run demo`. */
-export interface Deployment {
+export interface ContractInfo {
   address: string;
   abi: any[];
+}
+
+/** Written by scripts/demo-data.ts on `npm run demo`. */
+export interface Deployment extends ContractInfo {
   accounts: DemoAccount[];
+  /**
+   * Optional, so an older deployment.json (from before ClaimRegistry was part
+   * of the demo) still loads. Without it, the claim screens say the demo has
+   * to be restarted.
+   */
+  claimRegistry?: ContractInfo;
 }
 
 export async function loadDeployment(): Promise<Deployment | undefined> {
@@ -31,7 +41,10 @@ const RPC_URL = "http://127.0.0.1:8545";
 export function connect(deployment: Deployment) {
   const provider = new JsonRpcProvider(RPC_URL);
   const contract = new Contract(deployment.address, deployment.abi, provider);
-  return { provider, contract };
+  const claims = deployment.claimRegistry
+    ? new Contract(deployment.claimRegistry.address, deployment.claimRegistry.abi, provider)
+    : null;
+  return { provider, contract, claims };
 }
 
 export async function writableContract(provider: JsonRpcProvider, address: string, deployment: Deployment) {
@@ -41,13 +54,23 @@ export async function writableContract(provider: JsonRpcProvider, address: strin
   return new Contract(deployment.address, deployment.abi, signer);
 }
 
+export async function writableClaims(provider: JsonRpcProvider, address: string, deployment: Deployment) {
+  if (!deployment.claimRegistry) throw new Error("ClaimRegistry is not deployed.");
+  const signer = await provider.getSigner(address);
+  return new Contract(deployment.claimRegistry.address, deployment.claimRegistry.abi, signer);
+}
+
 export interface Snapshot {
   batches: Map<bigint, Batch>;
   /** Role per address (lowercase). `undefined` if the address is unknown. */
   roles: Map<string, Role>;
+  /** Claims per batch ID, oldest first. Empty if ClaimRegistry is not deployed. */
+  claims: Map<bigint, Claim[]>;
+  /** Role per address (lowercase) according to ClaimRegistry, which keeps its own roles. */
+  claimRoles: Map<string, ClaimRole>;
 }
 
-export async function loadSnapshot(contract: Contract, deployment: Deployment): Promise<Snapshot> {
+export async function loadSnapshot(contract: Contract, claimRegistry: Contract | null, deployment: Deployment): Promise<Snapshot> {
   const count: bigint = await contract.batchCount();
   const batches = new Map<bigint, Batch>();
   for (let id = 1n; id <= count; id++) {
@@ -73,7 +96,32 @@ export async function loadSnapshot(contract: Contract, deployment: Deployment): 
     roles.set(account.address.toLowerCase(), Number(r) as Role);
   }
 
-  return { batches, roles };
+  const claims = new Map<bigint, Claim[]>();
+  const claimRoles = new Map<string, ClaimRole>();
+  if (claimRegistry) {
+    await Promise.all(
+      [...batches.keys()].map(async (id) => {
+        const raw: any[] = await claimRegistry.getClaims(id);
+        claims.set(
+          id,
+          raw.map((c, index) => ({
+            batchId: c.batchId,
+            submitter: c.submitter,
+            documentHash: c.documentHash,
+            timestamp: c.timestamp,
+            claimType: Number(c.claimType),
+            index,
+          })),
+        );
+      }),
+    );
+    for (const account of deployment.accounts) {
+      const r: bigint = await claimRegistry.roles(account.address);
+      claimRoles.set(account.address.toLowerCase(), Number(r) as ClaimRole);
+    }
+  }
+
+  return { batches, roles, claims, claimRoles };
 }
 
 /** Role of an arbitrary address, even if it's not in the snapshot yet. */

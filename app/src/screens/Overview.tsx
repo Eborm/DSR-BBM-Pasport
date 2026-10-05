@@ -26,26 +26,26 @@ export function Overview() {
   };
 
   const register = canRegister(role);
-  const toRegister = () => navigate(href.registreren());
+  const toRegister = () => navigate(href.register());
 
   return (
     <>
-      <div className="kop-rij">
+      <div className="heading-row">
         <h1>Batches</h1>
         <ActionButton permission={register} onClick={toRegister} primary>
-          Nieuwe batch registreren
+          Register new batch
         </ActionButton>
       </div>
 
       <div className="filters" role="search">
-        <label className="veld zoek">
-          <span>Zoeken op producent, materiaalsoort of herkomst</span>
-          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="bijv. staal, Heerlen" />
+        <label className="field search">
+          <span>Search by producer, material type or origin</span>
+          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. steel, Heerlen" />
         </label>
-        <label className="veld">
-          <span>Niveau</span>
+        <label className="field">
+          <span>Level</span>
           <select value={level} onChange={(e) => setLevel(e.target.value)}>
-            <option value="">Alle</option>
+            <option value="">All</option>
             {LEVELS.map((label, index) => (
               <option key={label} value={index}>
                 {label}
@@ -58,46 +58,46 @@ export function Overview() {
       {!snapshot ? (
         <TableSkeleton />
       ) : rows.length === 0 ? (
-        <div className="leeg">
-          <p>Nog geen batches geregistreerd.</p>
+        <div className="empty">
+          <p>No batches registered yet.</p>
           <ActionButton permission={register} onClick={toRegister} primary>
-            Eerste batch registreren
+            Register the first batch
           </ActionButton>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="leeg">
-          <p>Geen batches gevonden die aan deze zoekopdracht voldoen.</p>
-          <button type="button" className="knop" onClick={reset}>
-            Filters wissen
+        <div className="empty">
+          <p>No batches found that match this search.</p>
+          <button type="button" className="button" onClick={reset}>
+            Clear filters
           </button>
         </div>
       ) : (
         <>
-          <p className="stil" aria-live="polite">
+          <p className="muted" aria-live="polite">
             {filtered.length} {filtered.length === 1 ? "batch" : "batches"}
-            {filtering && ` van ${rows.length}`}
+            {filtering && ` of ${rows.length}`}
           </p>
-          <div className="tabel">
+          <div className="table-wrap">
             <table>
               <thead>
                 <tr>
                   <th scope="col">ID</th>
-                  <th scope="col">Producent</th>
-                  <th scope="col">Materiaalsoort</th>
-                  <th scope="col">Classificatie</th>
-                  <th scope="col">Niveau</th>
-                  <th scope="col" className="getal">
-                    Massa (kg)
+                  <th scope="col">Producer</th>
+                  <th scope="col">Material type</th>
+                  <th scope="col">Classification</th>
+                  <th scope="col">Level</th>
+                  <th scope="col" className="number">
+                    Mass (kg)
                   </th>
-                  <th scope="col">Herkomst</th>
-                  <th scope="col">Bron</th>
-                  <th scope="col">Eigenaar</th>
-                  <th scope="col">Geregistreerd</th>
+                  <th scope="col">Origin</th>
+                  <th scope="col">Source</th>
+                  <th scope="col">Owner</th>
+                  <th scope="col">Registered</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((batch) => (
-                  <tr key={batch.id.toString()} className="klikbaar" onClick={() => navigate(href.batch(batch.id))}>
+                  <tr key={batch.id.toString()} className="clickable" onClick={() => navigate(href.batch(batch.id))}>
                     <td>
                       <a href={href.batch(batch.id)}>#{batch.id.toString()}</a>
                     </td>
@@ -105,8 +105,8 @@ export function Overview() {
                     <td>{batch.materialType}</td>
                     <td>{CLASSIFICATION_LABEL[batch.classification]}</td>
                     <td>{LEVELS[batch.level]}</td>
-                    <td className="getal">{batch.mass.toString()}</td>
-                    <td>{batch.origin || <span className="stil">–</span>}</td>
+                    <td className="number">{batch.mass.toString()}</td>
+                    <td>{batch.origin || <span className="muted">–</span>}</td>
                     <td>{SOURCE_FILE_LABEL[batch.sourceFile]}</td>
                     <td>{nameOf(batch.currentOwner) ?? shortAddress(batch.currentOwner)}</td>
                     <td>{formatDateTime(batch.registeredAt)}</td>
@@ -123,7 +123,7 @@ export function Overview() {
 
 function TableSkeleton() {
   return (
-    <div className="tabel" aria-busy="true" aria-label="Batches laden">
+    <div className="table-wrap" aria-busy="true" aria-label="Loading batches">
       <table>
         <tbody>
           {[0, 1, 2, 3].map((row) => (

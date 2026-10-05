@@ -5,11 +5,12 @@
  *
  * This file replaced the original domain.ts from the team project. Functionality
  * that existed in the original contract but is not (yet) in Sven's contract
- * (claims, transfer, splitting, multiple roles per address) is deliberately NOT
- * reimplemented here -- the screens that used it (AddClaim, TransferSplit, Scan,
- * Verify) show a clear "not yet available" message instead. The Chain (developer
- * view) screen is kept, since it only reads raw blocks/transactions and doesn't
- * depend on contract-specific functionality.
+ * (transfer, splitting, multiple roles per address) is deliberately NOT
+ * reimplemented here -- the screens that used it (TransferSplit, Scan) show a
+ * clear "not yet available" message instead. Claims live in a separate contract
+ * (ClaimRegistry.sol); their types are at the bottom of this file. The Chain
+ * (developer view) screen is kept, since it only reads raw blocks/transactions
+ * and doesn't depend on contract-specific functionality.
  */
 
 // ------------------------------------------------------------------ Roles
@@ -23,11 +24,11 @@ export enum Role {
 }
 
 export const ROLE_LABEL: Record<Role, string> = {
-  [Role.Viewer]: "Raadpleger",
-  [Role.Manufacturer]: "Fabrikant",
-  [Role.Inspector]: "Keuringsinstantie",
-  [Role.Owner]: "Aannemer/eigenaar",
-  [Role.Demolisher]: "Sloper",
+  [Role.Viewer]: "Viewer",
+  [Role.Manufacturer]: "Manufacturer",
+  [Role.Inspector]: "Inspector",
+  [Role.Owner]: "Owner",
+  [Role.Demolisher]: "Demolisher",
 };
 
 // --------------------------------------------------------------- Other enums
@@ -59,7 +60,7 @@ export enum Level {
   BuildingElement,
 }
 
-export const LEVELS = ["Grondstof", "Product", "Component", "Bouwelement"] as const;
+export const LEVELS = ["Raw material", "Product", "Component", "Building element"] as const;
 export const LEVEL_LABEL: Record<Level, string> = {
   [Level.RawMaterial]: LEVELS[0],
   [Level.Product]: LEVELS[1],
@@ -74,9 +75,9 @@ export enum SourceFile {
 }
 
 export const SOURCE_FILE_LABEL: Record<SourceFile, string> = {
-  [SourceFile.Bim]: "BIM/IFC-model",
-  [SourceFile.InspectionReport]: "Keuringsrapport",
-  [SourceFile.DemolitionInventory]: "Sloopinventaris",
+  [SourceFile.Bim]: "BIM/IFC model",
+  [SourceFile.InspectionReport]: "Inspection report",
+  [SourceFile.DemolitionInventory]: "Demolition inventory",
 };
 
 // ---------------------------------------------------------------- Data
@@ -105,24 +106,112 @@ export interface Permission {
 const ALLOWED: Permission = { allowed: true };
 const NO_ACCOUNT: Permission = {
   allowed: false,
-  reason: "Geen account gekozen. Kies bovenaan een account om handelingen uit te voeren.",
+  reason: "No account selected. Choose an account at the top to perform actions.",
 };
 
 /** `role` is `null` if no account is chosen. */
 export function canRegister(role: Role | null): Permission {
   if (role === null) return NO_ACCOUNT;
   if (role !== Role.Manufacturer) {
-    return { allowed: false, reason: "Alleen een account met de rol Fabrikant kan batches registreren." };
+    return { allowed: false, reason: "Only an account with the Manufacturer role can register batches." };
   }
   return ALLOWED;
 }
 
 /**
  * Functionality that is not yet in the contract. The screens that use this
- * (AddClaim, TransferSplit, Scan, Verify) show a clear message instead of a
- * crash or a confusing error.
+ * (TransferSplit, Scan) show a clear message instead of a crash or a
+ * confusing error.
  */
 export const NOT_IMPLEMENTED: Permission = {
   allowed: false,
-  reason: "Deze functionaliteit staat nog niet in het contract. Dit volgt in een latere iteratie.",
+  reason: "This functionality is not in the contract yet. It will follow in a later iteration.",
 };
+
+// -------------------------------------------------------- Claims (ClaimRegistry.sol)
+
+/**
+ * Roles as ClaimRegistry.sol knows them. Careful: this is a different order
+ * than `Role` above. MaterialPassport starts with Viewer = 0, ClaimRegistry
+ * starts with Manufacturer = 0, and each contract keeps its own roles. Never
+ * pass a `Role` to ClaimRegistry or the other way around.
+ */
+export enum ClaimRole {
+  Manufacturer,
+  Owner,
+  Inspector,
+  Demolisher,
+  Viewer,
+}
+
+export const CLAIM_ROLE_LABEL: Record<ClaimRole, string> = {
+  [ClaimRole.Manufacturer]: "Manufacturer",
+  [ClaimRole.Owner]: "Owner",
+  [ClaimRole.Inspector]: "Inspector",
+  [ClaimRole.Demolisher]: "Demolisher",
+  [ClaimRole.Viewer]: "Viewer",
+};
+
+export enum ClaimType {
+  StatusChange,
+  LocationChange,
+  QualityDeclaration,
+}
+
+export const CLAIM_TYPES = [ClaimType.StatusChange, ClaimType.LocationChange, ClaimType.QualityDeclaration] as const;
+
+export const CLAIM_TYPE_LABEL: Record<ClaimType, string> = {
+  [ClaimType.StatusChange]: "Status change",
+  [ClaimType.LocationChange]: "Location change",
+  [ClaimType.QualityDeclaration]: "Quality declaration",
+};
+
+/** Mirrors `_mayClaim` in ClaimRegistry.sol: who may add which type of claim. */
+export const CLAIM_TYPE_ALLOWED: Record<ClaimType, readonly ClaimRole[]> = {
+  [ClaimType.StatusChange]: [ClaimRole.Owner, ClaimRole.Demolisher],
+  [ClaimType.LocationChange]: [ClaimRole.Owner],
+  [ClaimType.QualityDeclaration]: [ClaimRole.Inspector],
+};
+
+export interface Claim {
+  batchId: bigint;
+  submitter: string;
+  /** keccak256 of the document, as 0x + 64 hex characters. */
+  documentHash: string;
+  /** Block time (Unix seconds). */
+  timestamp: bigint;
+  claimType: ClaimType;
+  /** Position within the claims of this batch; the contract never reorders or removes. */
+  index: number;
+}
+
+const allowedLabels = (type: ClaimType) => CLAIM_TYPE_ALLOWED[type].map((r) => CLAIM_ROLE_LABEL[r]).join(" or ");
+
+/** `role` is `null` if no account is chosen. */
+export function canAddClaim(role: ClaimRole | null, type: ClaimType): Permission {
+  if (role === null) return NO_ACCOUNT;
+  if (!CLAIM_TYPE_ALLOWED[type].includes(role)) {
+    return {
+      allowed: false,
+      reason: `A ${CLAIM_TYPE_LABEL[type].toLowerCase()} can only be added by: ${allowedLabels(type)}.`,
+    };
+  }
+  return ALLOWED;
+}
+
+/** Is there any claim type this role may add at all? Used for the button on the batch screen. */
+export function canAddAnyClaim(role: ClaimRole | null): Permission {
+  if (role === null) return NO_ACCOUNT;
+  if (!CLAIM_TYPES.some((type) => CLAIM_TYPE_ALLOWED[type].includes(role))) {
+    return {
+      allowed: false,
+      reason: "This account's role cannot add claims. Only an owner, inspector or demolisher can.",
+    };
+  }
+  return ALLOWED;
+}
+
+export const claimTypesFor = (role: ClaimRole | null) =>
+  role === null ? [] : CLAIM_TYPES.filter((type) => CLAIM_TYPE_ALLOWED[type].includes(role));
+
+export const allowedRolesLabel = allowedLabels;

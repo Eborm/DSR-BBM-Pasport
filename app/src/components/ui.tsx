@@ -1,5 +1,5 @@
 import { useId, useState, type ReactNode } from "react";
-import { ROLE_LABEL, type Permission, type Role } from "../lib/domain";
+import { CLAIM_ROLE_LABEL, ROLE_LABEL, type ClaimRole, type Permission, type Role } from "../lib/domain";
 import type { Explained } from "../lib/errors";
 import { shortAddress, shortHash } from "../lib/format";
 import { usePassport } from "../state";
@@ -27,13 +27,13 @@ function Copyable({ value, short, label, wrap = false }: { value: string; short:
     }
   };
   return (
-    <span className={wrap ? "kopieerbaar volledig" : "kopieerbaar"}>
+    <span className={wrap ? "copyable full" : "copyable"}>
       <code title={value}>{short}</code>
-      <button type="button" className="kopieer" onClick={copy} aria-label={`Kopieer ${label}`} title={`Kopieer ${label}`}>
+      <button type="button" className="copy" onClick={copy} aria-label={`Copy ${label}`} title={`Copy ${label}`}>
         {copied ? <span aria-hidden="true">✓</span> : <CopyIcon />}
       </button>
       <span className="sr" aria-live="polite">
-        {copied ? `${label} gekopieerd` : ""}
+        {copied ? `${label} copied` : ""}
       </span>
     </span>
   );
@@ -44,9 +44,9 @@ export function Address({ value, withRole = false }: { value: string; withRole?:
   const name = nameOf(value);
   const role = roleOf(value);
   return (
-    <span className="adres">
-      {name && <span className="adres-naam">{name}</span>}
-      <Copyable value={value} short={shortAddress(value)} label="adres" />
+    <span className="address">
+      {name && <span className="address-name">{name}</span>}
+      <Copyable value={value} short={shortAddress(value)} label="address" />
       {withRole && <RoleBadge role={role} />}
     </span>
   );
@@ -57,17 +57,23 @@ export function HashValue({ value, full = false }: { value: string; full?: boole
   return <Copyable value={value} short={full ? value : shortHash(value)} label="hash" wrap={full} />;
 }
 
-export function RoleBadge({ role, empty = "geen rol" }: { role: Role | undefined; empty?: string }) {
-  if (role === undefined) return <span className="rol geen">{empty}</span>;
-  return <span className="rol">{ROLE_LABEL[role]}</span>;
+export function RoleBadge({ role, empty = "no role" }: { role: Role | undefined; empty?: string }) {
+  if (role === undefined) return <span className="role none">{empty}</span>;
+  return <span className="role">{ROLE_LABEL[role]}</span>;
+}
+
+/** Role according to ClaimRegistry, which keeps its own roles apart from MaterialPassport. */
+export function ClaimRoleBadge({ role, empty = "no role" }: { role: ClaimRole | undefined; empty?: string }) {
+  if (role === undefined) return <span className="role none">{empty}</span>;
+  return <span className="role">{CLAIM_ROLE_LABEL[role]}</span>;
 }
 
 /** Message for functionality that is not yet in the contract. */
 export function NotImplemented({ what }: { what: string }) {
   return (
-    <div className="leeg">
+    <div className="empty">
       <h1>{what}</h1>
-      <p>Deze functionaliteit staat nog niet in het contract. Dit volgt in een latere iteratie.</p>
+      <p>This functionality is not in the contract yet. It will follow in a later iteration.</p>
     </div>
   );
 }
@@ -88,10 +94,10 @@ export function ActionButton({
 }) {
   const reasonId = useId();
   return (
-    <div className="actie">
+    <div className="action">
       <button
         type="button"
-        className={primary ? "knop primair" : "knop"}
+        className={primary ? "button primary" : "button"}
         disabled={!permission.allowed}
         aria-describedby={permission.allowed ? undefined : reasonId}
         onClick={onClick}
@@ -99,7 +105,7 @@ export function ActionButton({
         {children}
       </button>
       {!permission.allowed && (
-        <p className="reden" id={reasonId}>
+        <p className="reason" id={reasonId}>
           {permission.reason}
         </p>
       )}
@@ -111,7 +117,7 @@ export function SubmitButton({
   pending,
   disabled = false,
   children,
-  pendingLabel = "Transactie in behandeling…",
+  pendingLabel = "Transaction in progress…",
 }: {
   pending: boolean;
   disabled?: boolean;
@@ -119,10 +125,10 @@ export function SubmitButton({
   pendingLabel?: string;
 }) {
   return (
-    <button type="submit" className="knop primair" disabled={pending || disabled} aria-busy={pending}>
+    <button type="submit" className="button primary" disabled={pending || disabled} aria-busy={pending}>
       {pending ? (
         <>
-          <span className="voortgang" aria-hidden="true" />
+          <span className="progress" aria-hidden="true" />
           {pendingLabel}
         </>
       ) : (
@@ -134,17 +140,17 @@ export function SubmitButton({
 
 // ------------------------------------------------------------ Notifications
 
-export function ErrorBox({ error, title = "Transactie geweigerd" }: { error: Explained; title?: string }) {
+export function ErrorBox({ error, title = "Transaction rejected" }: { error: Explained; title?: string }) {
   return (
-    <div className="foutmelding" role="alert">
+    <div className="error-box" role="alert">
       <p>
         <span aria-hidden="true">⚠ </span>
         <strong>{title}.</strong> {error.message}
       </p>
       {error.technical && (
         <details>
-          <summary>Technische details</summary>
-          <p className="stil">{error.technical}</p>
+          <summary>Technical details</summary>
+          <p className="muted">{error.technical}</p>
         </details>
       )}
     </div>
@@ -157,7 +163,7 @@ export function Skeleton({ width = "100%", height = "1rem" }: { width?: string; 
 
 // ------------------------------------------------------------------ Steps
 
-export type StepState = "wachten" | "bezig" | "klaar" | "fout";
+export type StepState = "waiting" | "busy" | "done" | "failed";
 
 export interface Step {
   title: string;
@@ -165,21 +171,21 @@ export interface Step {
   detail?: ReactNode;
 }
 
-const STEP_LABEL: Record<StepState, string> = { wachten: "wacht", bezig: "bezig…", klaar: "klaar", fout: "mislukt" };
-const STEP_ICON: Record<StepState, string> = { wachten: "", bezig: "…", klaar: "✓", fout: "!" };
+const STEP_LABEL: Record<StepState, string> = { waiting: "waiting", busy: "in progress…", done: "done", failed: "failed" };
+const STEP_ICON: Record<StepState, string> = { waiting: "", busy: "…", done: "✓", failed: "!" };
 
 /** Makes the order save → hash → transaction visible (§6.2 D). */
 export function Steps({ steps }: { steps: Step[] }) {
   return (
-    <ol className="stappen">
+    <ol className="steps">
       {steps.map((step, index) => (
-        <li key={step.title} className={`stap stap-${step.state}`}>
-          <span className="stap-teken" aria-hidden="true">
+        <li key={step.title} className={`step step-${step.state}`}>
+          <span className="step-mark" aria-hidden="true">
             {STEP_ICON[step.state] || index + 1}
           </span>
           <div>
-            <p className="stap-titel">
-              {step.title} <span className="stap-status">({STEP_LABEL[step.state]})</span>
+            <p className="step-title">
+              {step.title} <span className="step-status">({STEP_LABEL[step.state]})</span>
             </p>
             {step.detail}
           </div>

@@ -1,15 +1,16 @@
 /**
- * Deploys MaterialPassport (Sven's contract), assigns roles to five test
- * accounts (admin + one account per role), and registers a couple of sample
- * batches. Writes address + ABI to app/public/deployment.json, so the web app
- * knows which contract to talk to.
+ * Deploys MaterialPassport (Sven's contract) and ClaimRegistry (Bram's contract), assigns roles
+ * to five test accounts (admin + one account per role) in both, registers a
+ * couple of sample batches and adds a few sample claims. Writes address + ABI
+ * of both contracts to app/public/deployment.json, so the web app knows which
+ * contracts to talk to.
  *
  *   hardhat run scripts/demo-data.ts --network localhost
  *
  * Expects a running local chain (hardhat node).
  */
 import { network } from "hardhat";
-import { writeFile, mkdir } from "node:fs/promises";
+import { writeFile, mkdir, readFile } from "node:fs/promises";
 
 const { ethers } = await network.connect({ network: "localhost" });
 
@@ -35,29 +36,56 @@ async function main() {
   await (
     await registry
       .connect(manufacturer)
-      .registerBatch("Staalfabriek Zuid-Limburg", 2 /* B */, "Staal S355, HEA 200", 3 /* BuildingElement */, 5000n, "Heerlen", now - 86400, 0 /* Bim */)
+      .registerBatch("South Limburg Steelworks", 2 /* B */, "Steel S355, HEA 200", 3 /* BuildingElement */, 5000n, "Heerlen", now - 86400, 0 /* Bim */)
   ).wait();
   await (
     await registry
       .connect(manufacturer)
-      .registerBatch("Betonfabriek De Maas", 1 /* A2 */, "Kanaalplaatvloer beton C45/55", 2 /* Component */, 12000n, "Sittard", now - 172800, 0 /* Bim */)
+      .registerBatch("De Maas Concrete Factory", 1 /* A2 */, "Hollow-core slab concrete C45/55", 2 /* Component */, 12000n, "Sittard", now - 172800, 0 /* Bim */)
   ).wait();
 
+  // ClaimRegistry keeps its own roles, with its own enum order:
+  // Manufacturer 0, Owner 1, Inspector 2, Demolisher 3, Viewer 4 (not the same as MaterialPassport!).
+  console.log("Deploying ClaimRegistry...");
+  const claimRegistry = await ethers.deployContract("ClaimRegistry");
+  await claimRegistry.waitForDeployment();
+  const claimRegistryAddress = await claimRegistry.getAddress();
+  console.log(`ClaimRegistry is at ${claimRegistryAddress}`);
+
+  await (await claimRegistry.setRole(manufacturer.address, 0)).wait(); // Manufacturer
+  await (await claimRegistry.setRole(owner.address, 1)).wait(); // Owner
+  await (await claimRegistry.setRole(inspector.address, 2)).wait(); // Inspector
+  await (await claimRegistry.setRole(demolisher.address, 3)).wait(); // Demolisher
+
+  console.log("Adding sample claims...");
+  // The inspection report is a real file, so the Verify screen can be tried with it:
+  // download http://localhost:5173/demo/inspection-report-batch-1.txt and choose it there.
+  const report = await readFile("app/public/demo/inspection-report-batch-1.txt");
+  const hashOf = (text: string) => ethers.keccak256(ethers.toUtf8Bytes(text));
+  await (await claimRegistry.connect(inspector).addClaim(1, 2 /* QualityDeclaration */, ethers.keccak256(report))).wait();
+  await (await claimRegistry.connect(owner).addClaim(1, 1 /* LocationChange */, hashOf("Transport document to construction site Heerlen"))).wait();
+  await (await claimRegistry.connect(inspector).addClaim(2, 2 /* QualityDeclaration */, hashOf("Inspection report hollow-core slab C45/55"))).wait();
+
   const accounts = [
-    { address: admin.address, name: "Beheerder", role: "Admin" },
-    { address: manufacturer.address, name: "Staalfabriek Zuid-Limburg", role: ROLE_NAMES[1] },
-    { address: inspector.address, name: "Keuringsinstituut Limburg", role: ROLE_NAMES[2] },
-    { address: owner.address, name: "Bouwbedrijf Heerlen", role: ROLE_NAMES[3] },
-    { address: demolisher.address, name: "Sloopbedrijf Parkstad", role: ROLE_NAMES[4] },
+    { address: admin.address, name: "Administrator", role: "Admin" },
+    { address: manufacturer.address, name: "South Limburg Steelworks", role: ROLE_NAMES[1] },
+    { address: inspector.address, name: "Limburg Inspection Institute", role: ROLE_NAMES[2] },
+    { address: owner.address, name: "Heerlen Construction Company", role: ROLE_NAMES[3] },
+    { address: demolisher.address, name: "Parkstad Demolition Company", role: ROLE_NAMES[4] },
   ];
 
   const artifact = await import("../artifacts/contracts/MaterialPassport.sol/MaterialPassport.json", {
     with: { type: "json" },
   });
 
+  const claimArtifact = await import("../artifacts/contracts/ClaimRegistry.sol/ClaimRegistry.json", {
+    with: { type: "json" },
+  });
+
   const deployment = {
     address,
     abi: artifact.default.abi,
+    claimRegistry: { address: claimRegistryAddress, abi: claimArtifact.default.abi },
     accounts,
   };
 

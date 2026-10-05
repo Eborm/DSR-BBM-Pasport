@@ -1,7 +1,0 @@
-INSPECTION REPORT (example document for the demo)
-
-Batch: 1 - Steel S355, HEA 200
-Limburg Inspection Institute
-Result: approved, strength class S355 confirmed.
-
-Change one character in this file and the hash changes: verification will then no longer succeed.

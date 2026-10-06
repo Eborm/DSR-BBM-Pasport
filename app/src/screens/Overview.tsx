@@ -33,19 +33,19 @@ export function Overview() {
       <div className="heading-row">
         <h1>Batches</h1>
         <ActionButton permission={register} onClick={toRegister} primary>
-          Register new batch
+          Nieuwe batch registreren
         </ActionButton>
       </div>
 
       <div className="filters" role="search">
         <label className="field search">
-          <span>Search by producer, material type or origin</span>
-          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. steel, Heerlen" />
+          <span>Zoek op producent, materiaalsoort of herkomst</span>
+          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="bijv. staal, Heerlen" />
         </label>
         <label className="field">
-          <span>Level</span>
+          <span>Niveau</span>
           <select value={level} onChange={(e) => setLevel(e.target.value)}>
-            <option value="">All</option>
+            <option value="">Alle</option>
             {LEVELS.map((label, index) => (
               <option key={label} value={index}>
                 {label}
@@ -59,16 +59,16 @@ export function Overview() {
         <TableSkeleton />
       ) : rows.length === 0 ? (
         <div className="empty">
-          <p>No batches registered yet.</p>
+          <p>Er zijn nog geen batches geregistreerd.</p>
           <ActionButton permission={register} onClick={toRegister} primary>
-            Register the first batch
+            Eerste batch registreren
           </ActionButton>
         </div>
       ) : filtered.length === 0 ? (
         <div className="empty">
-          <p>No batches found that match this search.</p>
+          <p>Geen batches gevonden die aan deze zoekopdracht voldoen.</p>
           <button type="button" className="button" onClick={reset}>
-            Clear filters
+            Filters wissen
           </button>
         </div>
       ) : (
@@ -82,17 +82,17 @@ export function Overview() {
               <thead>
                 <tr>
                   <th scope="col">ID</th>
-                  <th scope="col">Producer</th>
-                  <th scope="col">Material type</th>
-                  <th scope="col">Classification</th>
-                  <th scope="col">Level</th>
+                  <th scope="col">Producent</th>
+                  <th scope="col">Materiaalsoort</th>
+                  <th scope="col">Classificatie</th>
+                  <th scope="col">Niveau</th>
                   <th scope="col" className="number">
-                    Mass (kg)
+                    Massa (kg)
                   </th>
-                  <th scope="col">Origin</th>
-                  <th scope="col">Source</th>
-                  <th scope="col">Owner</th>
-                  <th scope="col">Registered</th>
+                  <th scope="col">Herkomst</th>
+                  <th scope="col">Bron</th>
+                  <th scope="col">Eigenaar</th>
+                  <th scope="col">Geregistreerd</th>
                 </tr>
               </thead>
               <tbody>
@@ -123,7 +123,7 @@ export function Overview() {
 
 function TableSkeleton() {
   return (
-    <div className="table-wrap" aria-busy="true" aria-label="Loading batches">
+    <div className="table-wrap" aria-busy="true" aria-label="Batches laden">
       <table>
         <tbody>
           {[0, 1, 2, 3].map((row) => (

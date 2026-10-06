@@ -47,9 +47,9 @@ export function Verify({ id }: { id?: bigint }) {
   if (!claims) {
     return (
       <div className="empty">
-        <h1>verifier document</h1>
+        <h1>Document controleren</h1>
         <p>
-          Geen ClaimRegistry gedeployed. Stop de demo en start hem opnieuw met <code>npm run demo</code>.
+          ClaimRegistry is niet gedeployed. Stop de demo en start hem opnieuw met <code>npm run demo</code>.
         </p>
       </div>
     );
@@ -57,15 +57,15 @@ export function Verify({ id }: { id?: bigint }) {
 
   return (
     <div className="form">
-      <h1>verifier document</h1>
+      <h1>Document controleren</h1>
       <p>
-        Kies een document om te checken of deze in een claim is opgenomen
+        Kies een document om te controleren of dit in een claim is opgenomen
         {id !== undefined ? ` voor batch #${id.toString()}` : " voor elke batch"}. Het bestand wordt in je browser gehashed
-        en verlaat nooit je device
+        en verlaat nooit je apparaat.
       </p>
       {id !== undefined && (
         <p className="help">
-          <a href={href.verify()}>Zoek in all batches</a>
+          <a href={href.verify()}>Zoek in alle batches</a>
         </p>
       )}
 
@@ -76,7 +76,7 @@ export function Verify({ id }: { id?: bigint }) {
 
       <div className="outcome" aria-live="polite">
         {busy && <p className="muted">Hash berekenen…</p>}
-        {failed && <p className="field-error">Dit bestand kon niet gelezen worden. Kies opnieuw een bestand</p>}
+        {failed && <p className="field-error">Dit bestand kon niet worden gelezen. Kies opnieuw een bestand.</p>}
 
         {hash && file && !snapshot && <p className="muted">Claims laden…</p>}
 
@@ -88,11 +88,11 @@ export function Verify({ id }: { id?: bigint }) {
                   <span className="verification-icon" aria-hidden="true">
                     ✓
                   </span>
-                  Dit document is opgenomen in de blockchain
+                  Dit document is opgenomen in de blockchain.
                 </p>
                 <p>
-                  De hash van {file.name} matcht {matches.length === 1 ? "een claim" : `${matches.length} claims`} op de
-                  chain.
+                  De hash van {file.name} komt overeen met {matches.length === 1 ? "een claim" : `${matches.length} claims`} op de
+                  Chain.
                 </p>
               </div>
             ) : (
@@ -101,10 +101,10 @@ export function Verify({ id }: { id?: bigint }) {
                   <span className="verification-icon" aria-hidden="true">
                     ✕
                   </span>
-                  Geen claim gevonden in voor dit document
+                  Geen claim gevonden voor dit document.
                 </p>
                 <p>
-                  Geen claim met deze hash. Het document is nooit opgenomen in de blockchain of dit bestand is veranderd sinds dan.
+                  Geen claim met deze hash. Het document is nooit opgenomen in de blockchain, of dit bestand is sindsdien gewijzigd.
                 </p>
               </div>
             )}
@@ -119,9 +119,9 @@ export function Verify({ id }: { id?: bigint }) {
               <ul className="recorded">
                 {matches.map((claim) => (
                   <li key={`${claim.batchId}-${claim.index}`}>
-                    <strong>{CLAIM_TYPE_LABEL[claim.claimType]}</strong> on{" "}
+                    <strong>{CLAIM_TYPE_LABEL[claim.claimType]}</strong> op{" "}
                     <a href={href.batch(claim.batchId)}>batch #{claim.batchId.toString()}</a> (claim #{claim.index}),{" "}
-                    {formatDateTime(claim.timestamp)}, by <Address value={claim.submitter} />{" "}
+                    {formatDateTime(claim.timestamp)}, door <Address value={claim.submitter} />{" "}
                     <ClaimRoleBadge role={claimRoleOf(claim.submitter)} />
                   </li>
                 ))}

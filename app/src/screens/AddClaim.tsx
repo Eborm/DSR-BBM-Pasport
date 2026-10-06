@@ -39,8 +39,8 @@ export function AddClaim({ id }: { id: bigint }) {
   const hash = fileHash ?? (manualHash.trim() ? manualHash.trim().toLowerCase() : null);
   const hashProblem = useMemo(() => {
     if (hash === null) return null;
-    if (!isHash(hash)) return "A hash is 0x followed by 64 hexadecimal characters.";
-    if (hash === ZERO_HASH) return "A hash of only zeros is not allowed.";
+    if (!isHash(hash)) return "Een hash bestaat uit 0x gevolgd door 64 hexadecimale tekens.";
+    if (hash === ZERO_HASH) return "Een hash met alleen nullen is niet toegestaan.";
     return null;
   }, [hash]);
 
@@ -57,7 +57,7 @@ export function AddClaim({ id }: { id: bigint }) {
     try {
       setFileHash(await hashFile(next));
     } catch {
-      setHashError("This file could not be read. Choose it again.");
+      setHashError("Dit bestand kon niet worden gelezen. Kies het opnieuw.");
     } finally {
       setHashing(false);
     }
@@ -70,7 +70,7 @@ export function AddClaim({ id }: { id: bigint }) {
 
     const update = (index: number, step: Partial<Step>) =>
       setSteps((current) => current.map((s, i) => (i === index ? { ...s, ...step } : s)));
-    setSteps([{ title: "Send transaction", state: "busy" }]);
+    setSteps([{ title: "Transactie verzenden", state: "busy" }]);
     setPending(true);
 
     try {
@@ -86,7 +86,7 @@ export function AddClaim({ id }: { id: bigint }) {
           }
         })
         .find((parsed: any) => parsed?.name === "ClaimAdded");
-      update(0, { state: "done", detail: <p className="muted">Transaction {tx.hash.slice(0, 10)}… confirmed</p> });
+      update(0, { state: "done", detail: <p className="muted">Transactie {tx.hash.slice(0, 10)}… bevestigd</p> });
       await reload();
       setAdded({
         index: claimEvent ? Number(claimEvent.args.claimIndex) : (snapshot?.claims.get(id)?.length ?? 0),
@@ -106,9 +106,9 @@ export function AddClaim({ id }: { id: bigint }) {
   if (!batch) {
     return (
       <div className="empty">
-        <h1>Batch #{id.toString()} not found</h1>
+        <h1>Batch #{id.toString()} niet gevonden</h1>
         <a className="button" href={href.overview()}>
-          Back to the overview
+          Terug naar het overzicht
         </a>
       </div>
     );
@@ -117,9 +117,9 @@ export function AddClaim({ id }: { id: bigint }) {
   if (!claims) {
     return (
       <div className="empty">
-        <h1>Add claim</h1>
+        <h1>Claim toevoegen</h1>
         <p>
-          No ClaimRegistry is deployed. Stop the demo and start it again with <code>npm run demo</code>.
+          ClaimRegistry is niet gedeployed. Stop de demo en start hem opnieuw met <code>npm run demo</code>.
         </p>
       </div>
     );
@@ -128,19 +128,19 @@ export function AddClaim({ id }: { id: bigint }) {
   if (added) {
     return (
       <div className="result">
-        <h1>Claim #{added.index} added to batch #{id.toString()}</h1>
+        <h1>Claim #{added.index} toegevoegd aan batch #{id.toString()}</h1>
         <div className="result-content">
           <div>
             <p className="instruction">
-              The hash of the document is now fixed on the chain. Keep the original file safe: anyone who wants to check
-              it later needs exactly this file.
+              De hash van het document ligt nu vast op de Chain. Bewaar het originele bestand goed: iedereen die het later
+              wil controleren heeft precies dit bestand nodig.
             </p>
             <p>
-              <span className="muted">Document hash</span> <HashValue value={added.hash} />
+              <span className="muted">Documenthash</span> <HashValue value={added.hash} />
             </p>
             <div className="buttons">
               <a className="button primary" href={href.batch(id)}>
-                Go to batch #{id.toString()}
+                Ga naar batch #{id.toString()}
               </a>
               <button
                 type="button"
@@ -152,7 +152,7 @@ export function AddClaim({ id }: { id: bigint }) {
                   setManualHash("");
                 }}
               >
-                Add another claim
+                Nog een claim toevoegen
               </button>
             </div>
           </div>
@@ -165,7 +165,7 @@ export function AddClaim({ id }: { id: bigint }) {
 
   return (
     <form className="form" onSubmit={submit} noValidate>
-      <h1>Add claim to batch #{id.toString()}</h1>
+      <h1>Claim toevoegen aan batch #{id.toString()}</h1>
       <p className="muted">
         {batch.materialType} · {batch.producer}
       </p>
@@ -177,7 +177,7 @@ export function AddClaim({ id }: { id: bigint }) {
 
       <fieldset disabled={pending}>
         <label className="field">
-          <span>Claim type *</span>
+          <span>Claimtype *</span>
           <select value={type} onChange={(e) => setType(Number(e.target.value) as ClaimType)}>
             {CLAIM_TYPES.map((t) => (
               <option key={t} value={t}>
@@ -192,11 +192,11 @@ export function AddClaim({ id }: { id: bigint }) {
           <span>Document *</span>
           <input type="file" onChange={(e) => void chooseFile(e.target.files?.[0] ?? null)} />
           <span className="help">
-            The file is hashed in your browser and never leaves your device. Only the hash is put on the chain.
+            Het bestand wordt in je browser gehashed en verlaat je apparaat nooit. Alleen de hash wordt op de Chain gezet.
           </span>
         </label>
 
-        {hashing && <p className="muted">Calculating hash…</p>}
+        {hashing && <p className="muted">Hash wordt berekend…</p>}
         {hashError && <p className="field-error">{hashError}</p>}
         {fileHash && file && (
           <div className="computed-hash">
@@ -207,9 +207,9 @@ export function AddClaim({ id }: { id: bigint }) {
 
         {!file && (
           <details>
-            <summary className="muted">Or enter a hash yourself</summary>
+            <summary className="muted">Of voer zelf een hash in</summary>
             <label className="field">
-              <span>Document hash</span>
+              <span>Documenthash</span>
               <input
                 value={manualHash}
                 onChange={(e) => setManualHash(e.target.value)}
@@ -241,18 +241,18 @@ export function AddClaim({ id }: { id: bigint }) {
 
       <div className="buttons">
         <SubmitButton pending={pending} disabled={!permission.allowed || noHash || !!hashProblem || hashing}>
-          Add claim
+          Claim toevoegen
         </SubmitButton>
         <a className="button" href={href.batch(id)}>
           Cancel
         </a>
       </div>
       {permission.allowed && noHash && !hashing && (
-        <p className="help">Choose a document to be able to add the claim.</p>
+        <p className="help">Kies een document om de claim te kunnen toevoegen.</p>
       )}
       {/* Keep the rules close at hand for anyone who wonders why a type is refused. */}
       <details className="help">
-        <summary>Who can add which claim?</summary>
+        <summary>Wie kan welke claim toevoegen?</summary>
         <ul>
           {CLAIM_TYPES.map((t) => (
             <li key={t}>

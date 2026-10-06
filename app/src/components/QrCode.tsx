@@ -33,17 +33,17 @@ export function QrCode({ batch }: { batch: Batch }) {
   return (
     <figure className="qr">
       {image ? (
-        <img src={image} alt={`QR code linking to batch #${batch.id}`} width={160} height={160} />
+        <img src={image} alt={`QR-code met link naar batch #${batch.id}`} width={160} height={160} />
       ) : (
         <Skeleton width="160px" height="160px" />
       )}
       <figcaption>Batch #{batch.id.toString()}</figcaption>
       <div className="qr-buttons">
         <a className={image ? "button small" : "button small disabled"} href={image} download={`bbm-batch-${batch.id}-qr.png`}>
-          Download
+          Downloaden
         </a>
         <button type="button" className="button small" onClick={print} disabled={!image}>
-          Print
+          Afdrukken
         </button>
       </div>
       <div className="printlabel" aria-hidden="true">

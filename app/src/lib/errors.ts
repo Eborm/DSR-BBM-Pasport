@@ -31,13 +31,13 @@ function explainCustomError(name: string, args: readonly unknown[]): string | nu
   switch (name) {
     case "NotAllowed": {
       const type = Number(args[1]) as ClaimType;
-      if (!(type in CLAIM_TYPE_LABEL)) return "This account may not add this claim.";
-      return `This account may not add a ${CLAIM_TYPE_LABEL[type].toLowerCase()}. Only these roles can: ${allowedRolesLabel(type)}.`;
+      if (!(type in CLAIM_TYPE_LABEL)) return "Dit account mag deze claim niet toevoegen.";
+      return `Dit account mag geen ${CLAIM_TYPE_LABEL[type].toLowerCase()} toevoegen. Alleen deze rollen mogen dit: ${allowedRolesLabel(type)}.`;
     }
     case "EmptyHash":
-      return "The document has no valid hash. Choose a file or enter a hash.";
+      return "Het document heeft geen geldige hash. Kies een bestand of voer een hash in.";
     case "NotAdmin":
-      return "Only the administrator can assign roles.";
+      return "Alleen de administrator kan rollen toewijzen.";
     default:
       return null;
   }
@@ -47,10 +47,10 @@ export function explainError(error: unknown, contractInterface?: Interface): Exp
   const e = error as { reason?: string; shortMessage?: string; message?: string; code?: string };
 
   if (e?.code === "NETWORK_ERROR" || e?.code === "SERVER_ERROR" || /fetch|ECONNREFUSED/i.test(e?.message ?? "")) {
-    return { message: "No connection to the chain. Is the demo still running?", technical: e?.message };
+    return { message: "Geen verbinding met de Chain. Draait de demo nog?", technical: e?.message };
   }
   if (e?.code === "ACTION_REJECTED") {
-    return { message: "The transaction was not signed." };
+    return { message: "De transactie is niet ondertekend." };
   }
   if (contractInterface) {
     const custom = decodeCustomError(error, contractInterface);
@@ -65,5 +65,5 @@ export function explainError(error: unknown, contractInterface?: Interface): Exp
   if (typeof e?.shortMessage === "string" && e.shortMessage) {
     return { message: e.shortMessage };
   }
-  return { message: e?.message ?? "Something went wrong.", technical: e?.message };
+  return { message: e?.message ?? "Er is iets misgegaan.", technical: e?.message };
 }

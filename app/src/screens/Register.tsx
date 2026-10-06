@@ -36,11 +36,11 @@ export function Register() {
 
   function validate() {
     const found: Partial<Record<Field, string>> = {};
-    if (!form.producer.trim()) found.producer = "Enter a producer.";
-    if (!form.materialType.trim()) found.materialType = "Enter a material type.";
-    if (!/^\d+$/.test(form.mass) || BigInt(form.mass) === 0n) found.mass = "Enter a whole mass greater than zero.";
-    if (!form.origin.trim()) found.origin = "Enter an origin.";
-    if (!form.productionDate) found.productionDate = "Choose a production date.";
+    if (!form.producer.trim()) found.producer = "Voer een producent in.";
+    if (!form.materialType.trim()) found.materialType = "Voer een materiaalsoort in.";
+    if (!/^\d+$/.test(form.mass) || BigInt(form.mass) === 0n) found.mass = "Voer een gehele massa groter dan nul in.";
+    if (!form.origin.trim()) found.origin = "Voer een herkomst in.";
+    if (!form.productionDate) found.productionDate = "Kies een productiedatum.";
     setErrors(found);
     return Object.keys(found).length === 0;
   }
@@ -50,7 +50,7 @@ export function Register() {
     setFailure(null);
     if (!validate()) return;
 
-    const plan: Step[] = [{ title: "Send transaction", state: "waiting" }];
+    const plan: Step[] = [{ title: "Transactie verzenden", state: "waiting" }];
     const update = (index: number, step: Partial<Step>) =>
       setSteps((current) => current.map((s, i) => (i === index ? { ...s, ...step } : s)));
     setSteps(plan);
@@ -79,7 +79,7 @@ export function Register() {
           }
         })
         .find((parsed: any) => parsed?.name === "BatchRegistered");
-      update(0, { state: "done", detail: <p className="muted">Transaction {tx.hash.slice(0, 10)}… confirmed</p> });
+      update(0, { state: "done", detail: <p className="muted">Transactie {tx.hash.slice(0, 10)}… bevestigd</p> });
       await reload();
       setRegistered(event ? (event.args.batchId as bigint) : await contract.batchCount());
     } catch (error) {
@@ -94,17 +94,17 @@ export function Register() {
     const batch = snapshot?.batches.get(registered);
     return (
       <div className="result">
-        <h1>Batch #{registered.toString()} registered</h1>
+        <h1>Batch #{registered.toString()} geregistreerd</h1>
         <div className="result-content">
           {batch ? <QrCode batch={batch} /> : <Skeleton width="160px" height="160px" />}
           <div>
             <p className="instruction">
-              <strong>Attach this QR code to the material.</strong> Without a physical marking, the digital registration
-              cannot be found again later. Print the label or download it, and attach it visibly to the batch.
+              <strong>Bevestig deze QR-code aan het materiaal.</strong> Zonder fysieke markering kan de digitale registratie
+              later niet worden teruggevonden. Druk het label af of download het en bevestig het zichtbaar aan de batch.
             </p>
             <div className="buttons">
               <a className="button primary" href={href.batch(registered)}>
-                Go to batch #{registered.toString()}
+                Ga naar batch #{registered.toString()}
               </a>
               <button
                 type="button"
@@ -115,7 +115,7 @@ export function Register() {
                   setSteps([]);
                 }}
               >
-                Register another batch
+                Nog een batch registreren
               </button>
             </div>
           </div>
@@ -128,7 +128,7 @@ export function Register() {
 
   return (
     <form className="form" onSubmit={submit} noValidate>
-      <h1>Register batch</h1>
+      <h1>Batch registreren</h1>
       {!permission.allowed && (
         <p className="reason block" role="note">
           {permission.reason}
@@ -136,7 +136,7 @@ export function Register() {
       )}
       <fieldset disabled={!permission.allowed || pending}>
         <label className="field">
-          <span>Producer *</span>
+          <span>Producent *</span>
           <input
             value={form.producer}
             onChange={(e) => set("producer")(e.target.value)}
@@ -147,11 +147,11 @@ export function Register() {
         </label>
 
         <label className="field">
-          <span>Material type *</span>
+          <span>Materiaalsoort *</span>
           <input
             value={form.materialType}
             onChange={(e) => set("materialType")(e.target.value)}
-            placeholder="e.g. Steel S355, Concrete C30/37"
+            placeholder="bijv. Staal S355, Beton C30/37"
             aria-invalid={!!errors.materialType}
             aria-describedby={errorId("materialType")}
           />
@@ -160,7 +160,7 @@ export function Register() {
 
         <div className="row">
           <label className="field">
-            <span>Classification *</span>
+            <span>Classificatie *</span>
             <select value={form.classification} onChange={(e) => set("classification")(e.target.value)}>
               {Object.entries(CLASSIFICATION_LABEL).map(([value, label]) => (
                 <option key={value} value={value}>
@@ -170,7 +170,7 @@ export function Register() {
             </select>
           </label>
           <label className="field">
-            <span>Mass (kg) *</span>
+            <span>Massa (kg) *</span>
             <input
               inputMode="numeric"
               value={form.mass}
@@ -183,7 +183,7 @@ export function Register() {
         </div>
 
         <fieldset className="choices">
-          <legend>Level *</legend>
+          <legend>Niveau *</legend>
           {LEVELS.map((label, index) => (
             <label key={label} className="choice">
               <input
@@ -200,18 +200,18 @@ export function Register() {
 
         <div className="row">
           <label className="field">
-            <span>Origin *</span>
+            <span>Herkomst *</span>
             <input
               value={form.origin}
               onChange={(e) => set("origin")(e.target.value)}
-              placeholder="Producer or donor building"
+              placeholder="Producent of donorgebouw"
               aria-invalid={!!errors.origin}
               aria-describedby={errorId("origin")}
             />
             {errors.origin && <span className="field-error" id="error-origin">{errors.origin}</span>}
           </label>
           <label className="field">
-            <span>Production date *</span>
+            <span>Productiedatum *</span>
             <input
               type="date"
               value={form.productionDate}
@@ -224,7 +224,7 @@ export function Register() {
         </div>
 
         <label className="field">
-          <span>Source *</span>
+          <span>Bron *</span>
           <select value={form.sourceFile} onChange={(e) => set("sourceFile")(e.target.value)}>
             {Object.entries(SOURCE_FILE_LABEL).map(([value, label]) => (
               <option key={value} value={value}>
@@ -240,10 +240,10 @@ export function Register() {
 
       <div className="buttons">
         <SubmitButton pending={pending} disabled={!permission.allowed}>
-          Register
+          Registreren
         </SubmitButton>
         <a className="button" href={href.overview()}>
-          Cancel
+          Annuleren
         </a>
       </div>
     </form>

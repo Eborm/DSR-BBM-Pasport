@@ -79,7 +79,7 @@ function Layout() {
           </a>
           {developer && (
             <a href={href.chain()} aria-current={active("chain")}>
-              Keten
+              Chain
             </a>
           )}
         </nav>
@@ -90,7 +90,7 @@ function Layout() {
       {error && (
         <div className="connection" role="alert">
           <p>
-            <strong>Geen verbinding met de keten.</strong> {error}
+            <strong>Geen verbinding met de Chain.</strong> {error}
           </p>
           <button type="button" className="button small" onClick={() => void reload()}>
             Opnieuw proberen
@@ -126,9 +126,9 @@ function Screen({ route }: { route: ReturnType<typeof parseRoute> }) {
     default:
       return (
         <div className="empty">
-          <h1>Page not found</h1>
+          <h1>Pagina niet gevonden</h1>
           <a className="button" href={href.overview()}>
-            Back to the overview
+            Terug naar het overzicht
           </a>
         </div>
       );
@@ -179,7 +179,7 @@ function DeveloperSwitch() {
         Developer
       </label>
       {developer && blockNumber !== null && (
-        <a className="block-counter" href={href.chain()} title="Highest block of the chain, updated live">
+        <a className="block-counter" href={href.chain()} title="Hoogste block van de Chain, live bijgewerkt">
           <span className="live" aria-hidden="true" />
           block #{blockNumber}
         </a>
@@ -192,10 +192,10 @@ function NotStarted() {
   return (
     <main className="not-started">
       <h1>BBM passport</h1>
-      <p>The demo has not been started: no deployed contract was found.</p>
-      <p>Start the demo in a terminal in the project folder:</p>
+      <p>De demo is niet gestart: er is geen gedeployed contract gevonden.</p>
+      <p>Start de demo in een terminal in de projectmap:</p>
       <pre>npm run demo</pre>
-      <p className="muted">This starts the local chain, the demo data, and then this app.</p>
+      <p className="muted">Hiermee start je de lokale Chain, de demodata en daarna deze app.</p>
     </main>
   );
 }

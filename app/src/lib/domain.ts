@@ -60,7 +60,7 @@ export enum Level {
   BuildingElement,
 }
 
-export const LEVELS = ["Raw material", "Product", "Component", "Building element"] as const;
+export const LEVELS = ["Grondstof", "Product", "Component", "Bouwelement"] as const;
 export const LEVEL_LABEL: Record<Level, string> = {
   [Level.RawMaterial]: LEVELS[0],
   [Level.Product]: LEVELS[1],
@@ -76,8 +76,8 @@ export enum SourceFile {
 
 export const SOURCE_FILE_LABEL: Record<SourceFile, string> = {
   [SourceFile.Bim]: "BIM/IFC model",
-  [SourceFile.InspectionReport]: "Inspection report",
-  [SourceFile.DemolitionInventory]: "Demolition inventory",
+  [SourceFile.InspectionReport]: "Inspectierapport",
+  [SourceFile.DemolitionInventory]: "Sloopinventaris",
 };
 
 // ---------------------------------------------------------------- Data
@@ -125,7 +125,7 @@ export function canRegister(role: Role | null): Permission {
  */
 export const NOT_IMPLEMENTED: Permission = {
   allowed: false,
-  reason: "This functionality is not in the contract yet. It will follow in a later iteration.",
+  reason: "Deze functionaliteit zit nog niet in het contract. Dit volgt in een latere versie.",
 };
 
 // -------------------------------------------------------- Claims (ClaimRegistry.sol)
@@ -161,9 +161,9 @@ export enum ClaimType {
 export const CLAIM_TYPES = [ClaimType.StatusChange, ClaimType.LocationChange, ClaimType.QualityDeclaration] as const;
 
 export const CLAIM_TYPE_LABEL: Record<ClaimType, string> = {
-  [ClaimType.StatusChange]: "Status change",
-  [ClaimType.LocationChange]: "Location change",
-  [ClaimType.QualityDeclaration]: "Quality declaration",
+  [ClaimType.StatusChange]: "Statuswijziging",
+  [ClaimType.LocationChange]: "Locatiewijziging",
+  [ClaimType.QualityDeclaration]: "Kwaliteitsverklaring",
 };
 
 /** Mirrors `_mayClaim` in ClaimRegistry.sol: who may add which type of claim. */
@@ -193,7 +193,7 @@ export function canAddClaim(role: ClaimRole | null, type: ClaimType): Permission
   if (!CLAIM_TYPE_ALLOWED[type].includes(role)) {
     return {
       allowed: false,
-      reason: `A ${CLAIM_TYPE_LABEL[type].toLowerCase()} can only be added by: ${allowedLabels(type)}.`,
+      reason: `Een ${CLAIM_TYPE_LABEL[type].toLowerCase()} kan alleen worden toegevoegd door: ${allowedLabels(type)}.`,
     };
   }
   return ALLOWED;
@@ -205,7 +205,7 @@ export function canAddAnyClaim(role: ClaimRole | null): Permission {
   if (!CLAIM_TYPES.some((type) => CLAIM_TYPE_ALLOWED[type].includes(role))) {
     return {
       allowed: false,
-      reason: "This account's role cannot add claims. Only an owner, inspector or demolisher can.",
+      reason: "De rol van dit account kan geen claims toevoegen. Alleen een Owner, Inspector of Demolisher kan dit.",
     };
   }
   return ALLOWED;

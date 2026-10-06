@@ -176,7 +176,7 @@ function DeveloperSwitch() {
       <label className="switch">
         <input type="checkbox" role="switch" checked={developer} onChange={(e) => setDeveloper(e.target.checked)} />
         <span className="switch-track" aria-hidden="true" />
-        Developer
+        Ontwikkelaar
       </label>
       {developer && blockNumber !== null && (
         <a className="block-counter" href={href.chain()} title="Hoogste block van de Chain, live bijgewerkt">

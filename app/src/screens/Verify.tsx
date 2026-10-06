@@ -47,9 +47,9 @@ export function Verify({ id }: { id?: bigint }) {
   if (!claims) {
     return (
       <div className="empty">
-        <h1>Verify document</h1>
+        <h1>verifier document</h1>
         <p>
-          No ClaimRegistry is deployed. Stop the demo and start it again with <code>npm run demo</code>.
+          Geen ClaimRegistry gedeployed. Stop de demo en start hem opnieuw met <code>npm run demo</code>.
         </p>
       </div>
     );
@@ -57,15 +57,15 @@ export function Verify({ id }: { id?: bigint }) {
 
   return (
     <div className="form">
-      <h1>Verify document</h1>
+      <h1>verifier document</h1>
       <p>
-        Choose a document to check whether a claim has been recorded for it
-        {id !== undefined ? ` for batch #${id.toString()}` : " for any batch"}. The file is hashed in your browser and
-        never leaves your device.
+        Kies een document om te checken of deze in een claim is opgenomen
+        {id !== undefined ? ` voor batch #${id.toString()}` : " voor elke batch"}. Het bestand wordt in je browser gehashed
+        en verlaat nooit je device
       </p>
       {id !== undefined && (
         <p className="help">
-          <a href={href.verify()}>Search all batches</a>
+          <a href={href.verify()}>Zoek in all batches</a>
         </p>
       )}
 
@@ -75,10 +75,10 @@ export function Verify({ id }: { id?: bigint }) {
       </label>
 
       <div className="outcome" aria-live="polite">
-        {busy && <p className="muted">Calculating hash…</p>}
-        {failed && <p className="field-error">This file could not be read. Choose it again.</p>}
+        {busy && <p className="muted">Hash berekenen…</p>}
+        {failed && <p className="field-error">Dit bestand kon niet gelezen worden. Kies opnieuw een bestand</p>}
 
-        {hash && file && !snapshot && <p className="muted">Loading claims…</p>}
+        {hash && file && !snapshot && <p className="muted">Claims laden…</p>}
 
         {hash && file && snapshot && (
           <>
@@ -88,10 +88,10 @@ export function Verify({ id }: { id?: bigint }) {
                   <span className="verification-icon" aria-hidden="true">
                     ✓
                   </span>
-                  This document is recorded
+                  Dit document is opgenomen in de blockchain
                 </p>
                 <p>
-                  The hash of {file.name} matches {matches.length === 1 ? "one claim" : `${matches.length} claims`} on the
+                  De hash van {file.name} matcht {matches.length === 1 ? "een claim" : `${matches.length} claims`} op de
                   chain.
                 </p>
               </div>
@@ -101,17 +101,16 @@ export function Verify({ id }: { id?: bigint }) {
                   <span className="verification-icon" aria-hidden="true">
                     ✕
                   </span>
-                  No claim found for this document
+                  Geen claim gevonden in voor dit document
                 </p>
                 <p>
-                  No claim has this hash. Either the document was never recorded, or the file has changed since then, even if
-                  only by a single character.
+                  Geen claim met deze hash. Het document is nooit opgenomen in de blockchain of dit bestand is veranderd sinds dan.
                 </p>
               </div>
             )}
 
             <p className="computed-hash">
-              <span className="muted">Hash of {file.name} (keccak256)</span>
+              <span className="muted">Hash van {file.name} (keccak256)</span>
               <br />
               <HashValue value={hash} full />
             </p>

@@ -3,8 +3,8 @@
 export const shortAddress = (address: string) => `${address.slice(0, 6)}…${address.slice(-4)}`;
 export const shortHash = (hash: string) => `${hash.slice(0, 8)}…${hash.slice(-6)}`;
 
-const DATE = new Intl.DateTimeFormat("nl-NL", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
-const DATE_TIME = new Intl.DateTimeFormat("nl-NL", {
+const DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const DATE_TIME = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
   month: "short",
   year: "numeric",

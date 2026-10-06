@@ -1,31 +1,38 @@
-import { Address, NotImplemented } from "../components/ui";
-import { CLASSIFICATION_LABEL, LEVEL_LABEL, SOURCE_FILE_LABEL } from "../lib/domain";
+import { ActionButton, Address, ClaimRoleBadge, HashValue } from "../components/ui";
+import { CLAIM_TYPE_LABEL, CLASSIFICATION_LABEL, LEVEL_LABEL, SOURCE_FILE_LABEL, canAddAnyClaim } from "../lib/domain";
 import { formatDateTime } from "../lib/format";
-import { href } from "../lib/router";
+import { href, navigate } from "../lib/router";
 import { usePassport } from "../state";
 
 /** Screen B: details of a single batch. */
 export function BatchDetail({ id }: { id: bigint }) {
-  const { snapshot } = usePassport();
+  const { snapshot, claims, claimRole, claimRoleOf } = usePassport();
 
-  if (!snapshot) return <p className="stil">Laden...</p>;
+  if (!snapshot) return <p className="muted">Laden...</p>;
   const batch = snapshot.batches.get(id);
 
   if (!batch) {
     return (
-      <div className="leeg">
+      <div className="empty">
         <h1>Batch #{id.toString()} niet gevonden</h1>
-        <a className="knop" href={href.overzicht()}>
-          Naar het overzicht
+        <a className="button" href={href.overview()}>
+          Terug naar het overzicht
         </a>
       </div>
     );
   }
 
+  const list = snapshot.claims.get(id) ?? [];
+
   return (
     <>
-      <div className="kop-rij">
+      <div className="heading-row">
         <h1>Batch #{batch.id.toString()}</h1>
+        {claims && (
+          <ActionButton permission={canAddAnyClaim(claimRole)} onClick={() => navigate(href.claim(batch.id))} primary>
+            Claim toevoegen
+          </ActionButton>
+        )}
       </div>
 
       <dl className="details">
@@ -45,7 +52,7 @@ export function BatchDetail({ id }: { id: bigint }) {
         <dd>{batch.mass.toString()} kg</dd>
 
         <dt>Herkomst</dt>
-        <dd>{batch.origin || <span className="stil">–</span>}</dd>
+        <dd>{batch.origin || <span className="muted">–</span>}</dd>
 
         <dt>Productiedatum</dt>
         <dd>{formatDateTime(batch.productionDate)}</dd>
@@ -63,8 +70,38 @@ export function BatchDetail({ id }: { id: bigint }) {
       </dl>
 
       <section>
-        <h2>Historie</h2>
-        <NotImplemented what="Tijdlijn" />
+        <h2>Claims</h2>
+        {!claims ? (
+          <p className="muted">ClaimRegistry is niet gedeployed. Start de demo opnieuw met npm run demo.</p>
+        ) : list.length === 0 ? (
+          <p className="muted">Deze batch heeft nog geen claims.</p>
+        ) : (
+          <>
+            <ol className="timeline" aria-label="Claims, nieuwste eerst">
+              {[...list].reverse().map((claim) => (
+                <li key={claim.index}>
+                  <p className="line-header">
+                    <strong>{CLAIM_TYPE_LABEL[claim.claimType]}</strong>
+                    <time dateTime={new Date(Number(claim.timestamp) * 1000).toISOString()}>
+                      {formatDateTime(claim.timestamp)}
+                    </time>
+                    <span className="muted">claim #{claim.index}</span>
+                  </p>
+                  <p className="line-actor">
+                    <span className="muted">door</span> <Address value={claim.submitter} />{" "}
+                    <ClaimRoleBadge role={claimRoleOf(claim.submitter)} />
+                  </p>
+                  <div className="document">
+                    <span className="muted">Documenthash</span> <HashValue value={claim.documentHash} />
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <p>
+              <a href={href.verify(batch.id)}>Controleer een document tegen deze claims</a>
+            </p>
+          </>
+        )}
       </section>
     </>
   );

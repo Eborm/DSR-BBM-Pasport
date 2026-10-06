@@ -12,16 +12,18 @@ const PAGE = 15;
 
 const CALL_LABEL: Record<string, string> = {
   registerBatch: "batch registreren",
-  assignRole: "rol toekennen",
+  assignRole: "rol toewijzen",
+  addClaim: "claim toevoegen",
+  setRole: "rol toewijzen (claims)",
 };
 
 /**
- * "Keten" screen (developer view): the raw blocks, live. Shows that
+ * "Chain" screen (developer view): the raw blocks, live. Shows that
  * everything in the app comes from on-chain transactions, and that every
  * block refers to the previous one by its hash.
  */
 export function Chain({ focus }: { focus?: number }) {
-  const { provider, contract, deployment, blockNumber, developer, setDeveloper } = usePassport();
+  const { provider, contract, claims, deployment, blockNumber, developer, setDeveloper } = usePassport();
   const [count, setCount] = useState(PAGE);
   const [blocks, setBlocks] = useState<ChainBlock[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +33,9 @@ export function Chain({ focus }: { focus?: number }) {
   useEffect(() => {
     if (blockNumber === null || !developer) return;
     let cancelled = false;
-    loadBlocks(provider, contract.interface, deployment.address, blockNumber, Math.max(0, blockNumber - needed + 1)).then(
+    const contracts = [{ interface: contract.interface, address: deployment.address }];
+    if (claims && deployment.claimRegistry) contracts.push({ interface: claims.interface, address: deployment.claimRegistry.address });
+    loadBlocks(provider, contracts, blockNumber, Math.max(0, blockNumber - needed + 1)).then(
       (loaded) => {
         if (cancelled) return;
         setBlocks(loaded);
@@ -42,20 +46,20 @@ export function Chain({ focus }: { focus?: number }) {
     return () => {
       cancelled = true;
     };
-  }, [provider, contract, deployment, blockNumber, needed, developer]);
+  }, [provider, contract, claims, deployment, blockNumber, needed, developer]);
 
   const loaded = blocks !== null;
   useEffect(() => {
-    if (focus !== undefined && loaded) document.getElementById(`blok-${focus}`)?.scrollIntoView({ block: "start" });
+    if (focus !== undefined && loaded) document.getElementById(`block-${focus}`)?.scrollIntoView({ block: "start" });
   }, [focus, loaded]);
 
   if (!developer) {
     return (
-      <div className="leeg">
-        <h1>Keten</h1>
-        <p>Dit scherm hoort bij de ontwikkelaarsweergave.</p>
-        <button type="button" className="knop primair" onClick={() => setDeveloper(true)}>
-          Ontwikkelaarsweergave aanzetten
+      <div className="empty">
+        <h1>Chain</h1>
+        <p>Dit scherm maakt deel uit van de ontwikkelaarsweergave.</p>
+        <button type="button" className="button primary" onClick={() => setDeveloper(true)}>
+          Ontwikkelaarsweergave inschakelen
         </button>
       </div>
     );
@@ -66,41 +70,47 @@ export function Chain({ focus }: { focus?: number }) {
 
   return (
     <>
-      <div className="kop-rij">
-        <h1>Keten</h1>
-        <p className="stil">
-          Contract <Address value={deployment.address} />
+      <div className="heading-row">
+        <h1>Chain</h1>
+        <p className="muted">
+          MaterialPassport <Address value={deployment.address} />
+          {deployment.claimRegistry && (
+            <>
+              {" "}
+              · ClaimRegistry <Address value={deployment.claimRegistry.address} />
+            </>
+          )}
         </p>
       </div>
       <p>
-        Alle gegevens in deze app komen uit onderstaande transacties. Elk blok bevat de hash van het vorige blok: wie een
-        oud blok wijzigt, verandert die hash en breekt de keten vanaf dat punt. Geweigerde handelingen komen hier niet: het
-        contract weigert ze voordat ze in een blok belanden.
+        Alle gegevens in deze app komen uit de onderstaande transacties. Elk block bevat de hash van het vorige block: wie
+        een oud block wijzigt, wijzigt de hash en verbreekt de Chain vanaf dat punt. Afgewezen acties verschijnen hier niet:
+        het contract weigert ze voordat ze in een block terechtkomen.
       </p>
 
       {error && (
-        <p className="reden blok" role="alert">
+        <p className="reason block" role="alert">
           {error}
         </p>
       )}
 
       {!blocks ? (
-        <div aria-busy="true" aria-label="Blokken laden">
+        <div aria-busy="true" aria-label="Blocks laden">
           {[0, 1, 2].map((i) => (
             <Skeleton key={i} height="7rem" />
           ))}
         </div>
       ) : (
         <>
-          <p className={`verificatie ${intact ? "ok" : "fout"}`} role="status">
-            <span className="verificatie-icoon" aria-hidden="true">
+          <p className={`verification ${intact ? "ok" : "error"}`} role="status">
+            <span className="verification-icon" aria-hidden="true">
               {intact ? "✔" : "✖"}
             </span>
             {intact
-              ? `Keten klopt: elk van de ${blocks.length} getoonde blokken verwijst met zijn hash naar het vorige.`
-              : "Keten klopt niet: een blok verwijst niet naar de hash van zijn voorganger."}
+              ? `Chain is intact: elk van de ${blocks.length} getoonde blocks verwijst via zijn hash naar het vorige block.`
+              : "Chain is broken: een block verwijst niet naar de hash van zijn voorganger."}
           </p>
-          <ol className="blokken">
+          <ol className="blocks">
             {blocks.map((block, i) => (
               <BlockCard
                 key={block.number}
@@ -111,9 +121,9 @@ export function Chain({ focus }: { focus?: number }) {
             ))}
           </ol>
           {blocks[blocks.length - 1].number > 0 && (
-            <div className="knoppen">
-              <button type="button" className="knop" onClick={() => setCount(needed + PAGE)}>
-                Oudere blokken laden
+            <div className="buttons">
+              <button type="button" className="button" onClick={() => setCount(needed + PAGE)}>
+                Oudere blocks laden
               </button>
             </div>
           )}
@@ -125,30 +135,30 @@ export function Chain({ focus }: { focus?: number }) {
 
 function BlockCard({ block, focused, linked }: { block: ChainBlock; focused: boolean; linked?: boolean }) {
   return (
-    <li id={`blok-${block.number}`} className={focused ? "blok gemarkeerd" : "blok"}>
-      <div className="blok-kop">
-        <h2>Blok #{block.number}</h2>
+    <li id={`block-${block.number}`} className={focused ? "block highlighted" : "block"}>
+      <div className="block-header">
+        <h2>Block #{block.number}</h2>
         <time>{formatDateTime(block.timestamp)}</time>
-        {block.number === 0 && <span className="label">startblok</span>}
+        {block.number === 0 && <span className="label">genesis block</span>}
       </div>
       <dl className="hashes">
-        <dt>Hash van dit blok</dt>
+        <dt>Hash van dit block</dt>
         <dd>
           <HashValue value={block.hash} />
         </dd>
-        <dt>Hash van vorig blok</dt>
+        <dt>Hash van vorig block</dt>
         <dd>
           <HashValue value={block.parentHash} />
           {linked !== undefined && (
-            <span className="stil">
+            <span className="muted">
               {" "}
-              {linked ? `= hash van blok #${block.number - 1}` : `≠ hash van blok #${block.number - 1}`}
+              {linked ? `= hash of block #${block.number - 1}` : `≠ hash of block #${block.number - 1}`}
             </span>
           )}
         </dd>
       </dl>
       {block.txs.length === 0 ? (
-        <p className="stil">Geen transacties.</p>
+        <p className="muted">Geen transacties.</p>
       ) : (
         block.txs.map((tx) => <TxView key={tx.hash} tx={tx} />)
       )}
@@ -158,46 +168,51 @@ function BlockCard({ block, focused, linked }: { block: ChainBlock; focused: boo
 
 function TxView({ tx }: { tx: ChainTx }) {
   const { deployment } = usePassport();
-  const toContract = tx.to?.toLowerCase() === deployment.address.toLowerCase();
+  const known = [deployment.address, deployment.claimRegistry?.address].filter((a): a is string => !!a);
+  const toContract = tx.to !== null && known.some((a) => a.toLowerCase() === tx.to!.toLowerCase());
+  const deployedName =
+    tx.deployed && tx.deployed.toLowerCase() === deployment.claimRegistry?.address.toLowerCase()
+      ? "ClaimRegistry"
+      : "MaterialPassport";
   const title = tx.call
     ? `${tx.call.name}${CALL_LABEL[tx.call.name] ? ` · ${CALL_LABEL[tx.call.name]}` : ""}`
     : tx.deployed
-      ? "Contract uitgerold"
-      : "Transactie";
+      ? "Contract deployed"
+      : "Transaction";
 
   return (
     <div className="tx">
-      <p className="tx-kop">
+      <p className="tx-header">
         <strong>{title}</strong>
         {!tx.ok && <span className="label">teruggedraaid</span>}
       </p>
-      <p className="regel-actor">
-        <span className="stil">getekend door</span> <Address value={tx.from} withRole />
+      <p className="line-actor">
+        <span className="muted">ondertekend door</span> <Address value={tx.from} withRole />
         {tx.to && !toContract && (
           <>
-            <span className="stil">naar</span> <Address value={tx.to} />
+            <span className="muted">naar</span> <Address value={tx.to} />
           </>
         )}
       </p>
       {tx.deployed && (
         <p>
-          MaterialPassport op <Address value={tx.deployed} />
+          {deployedName} at <Address value={tx.deployed} />
         </p>
       )}
       {tx.call && tx.call.params.length > 0 && <Params params={tx.call.params} />}
       {tx.events.length > 0 && (
         <details>
-          <summary>Uitgezonden events ({tx.events.map((e) => e.name).join(", ")})</summary>
+          <summary>Uitgestuurde events ({tx.events.map((e) => e.name).join(", ")})</summary>
           {tx.events.map((event, i) => (
             <div key={i} className="event">
-              <p className="event-naam">{event.name}</p>
+              <p className="event-name">{event.name}</p>
               <Params params={event.params} />
             </div>
           ))}
         </details>
       )}
-      <p className="stil klein">
-        Transactie <HashValue value={tx.hash} /> · {tx.gasUsed.toLocaleString("nl-NL")} gas
+      <p className="muted small">
+        Transaction <HashValue value={tx.hash} /> · {tx.gasUsed.toLocaleString("en-GB")} gas
       </p>
     </div>
   );
@@ -244,19 +259,19 @@ function Value({ name, type, value }: { name: string; type: ParamType; value: un
   if (type.type === "address") return <Address value={String(value)} withRole />;
   if (type.type === "string") {
     const text = String(value);
-    if (!text) return <span className="stil">(leeg)</span>;
+    if (!text) return <span className="muted">(empty)</span>;
     return /^https?:\/\//.test(text) ? (
-      <a href={text} target="_blank" rel="noreferrer" className="breek">
+      <a href={text} target="_blank" rel="noreferrer" className="break">
         {text}
       </a>
     ) : (
       <span>"{text}"</span>
     );
   }
-  if (type.type === "bool") return <>{value ? "ja" : "nee"}</>;
-  if (name === "level" || name === "_level") return <>{String(value)} <span className="stil">({LEVELS[Number(value)]})</span></>;
+  if (type.type === "bool") return <>{value ? "yes" : "no"}</>;
+  if (name === "level" || name === "_level") return <>{String(value)} <span className="muted">({LEVELS[Number(value)]})</span></>;
   if (name === "productionDate" || name === "_productionDate" || name === "timestamp") {
-    return <>{String(value)} <span className="stil">({Number(value) === 0 ? "leeg" : formatDateTime(Number(value))})</span></>;
+    return <>{String(value)} <span className="muted">({Number(value) === 0 ? "empty" : formatDateTime(Number(value))})</span></>;
   }
   if (name === "batchId" || name === "id" || name === "_id") {
     return <a href={href.batch(BigInt(String(value)))}>{String(value)}</a>;

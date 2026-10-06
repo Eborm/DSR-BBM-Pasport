@@ -36,10 +36,10 @@ export function Register() {
 
   function validate() {
     const found: Partial<Record<Field, string>> = {};
-    if (!form.producer.trim()) found.producer = "Vul een producent in.";
-    if (!form.materialType.trim()) found.materialType = "Vul een materiaalsoort in.";
-    if (!/^\d+$/.test(form.mass) || BigInt(form.mass) === 0n) found.mass = "Vul een hele massa groter dan nul in.";
-    if (!form.origin.trim()) found.origin = "Vul een herkomst in.";
+    if (!form.producer.trim()) found.producer = "Voer een producent in.";
+    if (!form.materialType.trim()) found.materialType = "Voer een materiaalsoort in.";
+    if (!/^\d+$/.test(form.mass) || BigInt(form.mass) === 0n) found.mass = "Voer een gehele massa groter dan nul in.";
+    if (!form.origin.trim()) found.origin = "Voer een herkomst in.";
     if (!form.productionDate) found.productionDate = "Kies een productiedatum.";
     setErrors(found);
     return Object.keys(found).length === 0;
@@ -50,14 +50,14 @@ export function Register() {
     setFailure(null);
     if (!validate()) return;
 
-    const plan: Step[] = [{ title: "Transactie versturen", state: "wachten" }];
+    const plan: Step[] = [{ title: "Transactie verzenden", state: "waiting" }];
     const update = (index: number, step: Partial<Step>) =>
       setSteps((current) => current.map((s, i) => (i === index ? { ...s, ...step } : s)));
     setSteps(plan);
     setPending(true);
 
     try {
-      update(0, { state: "bezig" });
+      update(0, { state: "busy" });
       const passport = await writer();
       const tx = await passport.registerBatch(
         form.producer.trim(),
@@ -79,11 +79,11 @@ export function Register() {
           }
         })
         .find((parsed: any) => parsed?.name === "BatchRegistered");
-      update(0, { state: "klaar", detail: <p className="stil">Transactie {tx.hash.slice(0, 10)}… bevestigd</p> });
+      update(0, { state: "done", detail: <p className="muted">Transactie {tx.hash.slice(0, 10)}… bevestigd</p> });
       await reload();
       setRegistered(event ? (event.args.batchId as bigint) : await contract.batchCount());
     } catch (error) {
-      update(0, { state: "fout" });
+      update(0, { state: "failed" });
       setFailure(explainError(error));
     } finally {
       setPending(false);
@@ -93,22 +93,22 @@ export function Register() {
   if (registered !== null) {
     const batch = snapshot?.batches.get(registered);
     return (
-      <div className="resultaat">
+      <div className="result">
         <h1>Batch #{registered.toString()} geregistreerd</h1>
-        <div className="resultaat-inhoud">
+        <div className="result-content">
           {batch ? <QrCode batch={batch} /> : <Skeleton width="160px" height="160px" />}
           <div>
-            <p className="instructie">
-              <strong>Breng deze QR-code aan op het materiaal.</strong> Zonder fysieke markering is de digitale registratie
-              later niet terug te vinden. Druk het label af of download het, en bevestig het zichtbaar op de batch.
+            <p className="instruction">
+              <strong>Bevestig deze QR-code aan het materiaal.</strong> Zonder fysieke markering kan de digitale registratie
+              later niet worden teruggevonden. Druk het label af of download het en bevestig het zichtbaar aan de batch.
             </p>
-            <div className="knoppen">
-              <a className="knop primair" href={href.batch(registered)}>
-                Naar batch #{registered.toString()}
+            <div className="buttons">
+              <a className="button primary" href={href.batch(registered)}>
+                Ga naar batch #{registered.toString()}
               </a>
               <button
                 type="button"
-                className="knop"
+                className="button"
                 onClick={() => {
                   setRegistered(null);
                   setForm(EMPTY);
@@ -124,18 +124,18 @@ export function Register() {
     );
   }
 
-  const errorId = (field: Field) => (errors[field] ? `fout-${field}` : undefined);
+  const errorId = (field: Field) => (errors[field] ? `error-${field}` : undefined);
 
   return (
-    <form className="formulier" onSubmit={submit} noValidate>
+    <form className="form" onSubmit={submit} noValidate>
       <h1>Batch registreren</h1>
       {!permission.allowed && (
-        <p className="reden blok" role="note">
+        <p className="reason block" role="note">
           {permission.reason}
         </p>
       )}
       <fieldset disabled={!permission.allowed || pending}>
-        <label className="veld">
+        <label className="field">
           <span>Producent *</span>
           <input
             value={form.producer}
@@ -143,10 +143,10 @@ export function Register() {
             aria-invalid={!!errors.producer}
             aria-describedby={errorId("producer")}
           />
-          {errors.producer && <span className="veldfout" id="fout-producer">{errors.producer}</span>}
+          {errors.producer && <span className="field-error" id="error-producer">{errors.producer}</span>}
         </label>
 
-        <label className="veld">
+        <label className="field">
           <span>Materiaalsoort *</span>
           <input
             value={form.materialType}
@@ -155,11 +155,11 @@ export function Register() {
             aria-invalid={!!errors.materialType}
             aria-describedby={errorId("materialType")}
           />
-          {errors.materialType && <span className="veldfout" id="fout-materialType">{errors.materialType}</span>}
+          {errors.materialType && <span className="field-error" id="error-materialType">{errors.materialType}</span>}
         </label>
 
-        <div className="rij">
-          <label className="veld">
+        <div className="row">
+          <label className="field">
             <span>Classificatie *</span>
             <select value={form.classification} onChange={(e) => set("classification")(e.target.value)}>
               {Object.entries(CLASSIFICATION_LABEL).map(([value, label]) => (
@@ -169,7 +169,7 @@ export function Register() {
               ))}
             </select>
           </label>
-          <label className="veld">
+          <label className="field">
             <span>Massa (kg) *</span>
             <input
               inputMode="numeric"
@@ -178,14 +178,14 @@ export function Register() {
               aria-invalid={!!errors.mass}
               aria-describedby={errorId("mass")}
             />
-            {errors.mass && <span className="veldfout" id="fout-mass">{errors.mass}</span>}
+            {errors.mass && <span className="field-error" id="error-mass">{errors.mass}</span>}
           </label>
         </div>
 
-        <fieldset className="keuzes">
+        <fieldset className="choices">
           <legend>Niveau *</legend>
           {LEVELS.map((label, index) => (
-            <label key={label} className="keuze">
+            <label key={label} className="choice">
               <input
                 type="radio"
                 name="level"
@@ -198,8 +198,8 @@ export function Register() {
           ))}
         </fieldset>
 
-        <div className="rij">
-          <label className="veld">
+        <div className="row">
+          <label className="field">
             <span>Herkomst *</span>
             <input
               value={form.origin}
@@ -208,9 +208,9 @@ export function Register() {
               aria-invalid={!!errors.origin}
               aria-describedby={errorId("origin")}
             />
-            {errors.origin && <span className="veldfout" id="fout-origin">{errors.origin}</span>}
+            {errors.origin && <span className="field-error" id="error-origin">{errors.origin}</span>}
           </label>
-          <label className="veld">
+          <label className="field">
             <span>Productiedatum *</span>
             <input
               type="date"
@@ -219,11 +219,11 @@ export function Register() {
               aria-invalid={!!errors.productionDate}
               aria-describedby={errorId("productionDate")}
             />
-            {errors.productionDate && <span className="veldfout" id="fout-productionDate">{errors.productionDate}</span>}
+            {errors.productionDate && <span className="field-error" id="error-productionDate">{errors.productionDate}</span>}
           </label>
         </div>
 
-        <label className="veld">
+        <label className="field">
           <span>Bron *</span>
           <select value={form.sourceFile} onChange={(e) => set("sourceFile")(e.target.value)}>
             {Object.entries(SOURCE_FILE_LABEL).map(([value, label]) => (
@@ -238,11 +238,11 @@ export function Register() {
       {steps.length > 0 && <Steps steps={steps} />}
       {failure && <ErrorBox error={failure} />}
 
-      <div className="knoppen">
+      <div className="buttons">
         <SubmitButton pending={pending} disabled={!permission.allowed}>
           Registreren
         </SubmitButton>
-        <a className="knop" href={href.overzicht()}>
+        <a className="button" href={href.overview()}>
           Annuleren
         </a>
       </div>

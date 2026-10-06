@@ -3,10 +3,12 @@ import { NotImplemented, RoleBadge } from "./components/ui";
 import { loadDeployment, type Deployment } from "./lib/chain";
 import { shortAddress } from "./lib/format";
 import { href, parseRoute, useHash } from "./lib/router";
+import { AddClaim } from "./screens/AddClaim";
 import { BatchDetail } from "./screens/BatchDetail";
 import { Chain } from "./screens/Chain";
 import { Overview } from "./screens/Overview";
 import { Register } from "./screens/Register";
+import { Verify } from "./screens/Verify";
 import { PassportProvider, usePassport } from "./state";
 
 export function App() {
@@ -34,14 +36,14 @@ function Layout() {
   const { error, reload, developer } = usePassport();
   const main = useRef<HTMLElement>(null);
 
-  // Move focus to the content on every new screen, for keyboard and screen readers.
+  // Move focus to the content on every new screen, for keyboard and screen reader users.
   useEffect(() => {
     main.current?.focus();
     window.scrollTo(0, 0);
   }, [hash]);
 
   const active = (screen: string) =>
-    route.screen === screen || (screen === "overzicht" && ["batch", "claim", "overdragen", "registreren"].includes(route.screen))
+    route.screen === screen || (screen === "overview" && ["batch", "claim", "transfer", "register"].includes(route.screen))
       ? "page"
       : undefined;
 
@@ -49,35 +51,35 @@ function Layout() {
     <>
       {/* Not a plain anchor link: the hash belongs to the router. */}
       <a
-        className="overslaan"
-        href="#inhoud"
+        className="skip-link"
+        href="#content"
         onClick={(e) => {
           e.preventDefault();
           main.current?.focus();
         }}
       >
-        Naar de inhoud
+        Ga naar inhoud
       </a>
-      <header className="balk">
-        <a className="merk" href={href.overzicht()}>
+      <header className="topbar">
+        <a className="brand" href={href.overview()}>
           BBM-paspoort
         </a>
         <nav aria-label="Hoofdmenu">
-          <a href={href.overzicht()} aria-current={active("overzicht")}>
+          <a href={href.overview()} aria-current={active("overview")}>
             Overzicht
           </a>
-          <a href={href.registreren()} aria-current={active("registreren")}>
+          <a href={href.register()} aria-current={active("register")}>
             Registreren
           </a>
-          <a href={href.scannen()} aria-current={active("scannen")}>
+          <a href={href.scan()} aria-current={active("scan")}>
             Scannen
           </a>
-          <a href={href.verifieren()} aria-current={active("verifieren")}>
-            Verifiëren
+          <a href={href.verify()} aria-current={active("verify")}>
+            Controleren
           </a>
           {developer && (
-            <a href={href.keten()} aria-current={active("keten")}>
-              Keten
+            <a href={href.chain()} aria-current={active("chain")}>
+              Chain
             </a>
           )}
         </nav>
@@ -86,17 +88,17 @@ function Layout() {
       </header>
 
       {error && (
-        <div className="verbinding" role="alert">
+        <div className="connection" role="alert">
           <p>
-            <strong>Geen verbinding met de keten.</strong> {error}
+            <strong>Geen verbinding met de Chain.</strong> {error}
           </p>
-          <button type="button" className="knop klein" onClick={() => void reload()}>
+          <button type="button" className="button small" onClick={() => void reload()}>
             Opnieuw proberen
           </button>
         </div>
       )}
 
-      <main id="inhoud" ref={main} tabIndex={-1}>
+      <main id="content" ref={main} tabIndex={-1}>
         <Screen route={route} />
       </main>
     </>
@@ -105,28 +107,28 @@ function Layout() {
 
 function Screen({ route }: { route: ReturnType<typeof parseRoute> }) {
   switch (route.screen) {
-    case "overzicht":
+    case "overview":
       return <Overview />;
     case "batch":
       return <BatchDetail key={route.id.toString()} id={route.id} />;
     case "claim":
-      return <NotImplemented what="Claim toevoegen" />;
-    case "overdragen":
-      return <NotImplemented what={route.mode === "splitsen" ? "Batch splitsen" : "Eigendom overdragen"} />;
-    case "registreren":
+      return <AddClaim key={route.id.toString()} id={route.id} />;
+    case "transfer":
+      return <NotImplemented what={route.mode === "split" ? "Split batch" : "Transfer ownership"} />;
+    case "register":
       return <Register />;
-    case "scannen":
-      return <NotImplemented what="QR-code scannen" />;
-    case "verifieren":
-      return <NotImplemented what="Document verifiëren" />;
-    case "keten":
+    case "scan":
+      return <NotImplemented what="Scan QR code" />;
+    case "verify":
+      return <Verify key={route.id?.toString() ?? "all"} id={route.id} />;
+    case "chain":
       return <Chain focus={route.block} />;
     default:
       return (
-        <div className="leeg">
+        <div className="empty">
           <h1>Pagina niet gevonden</h1>
-          <a className="knop" href={href.overzicht()}>
-            Naar het overzicht
+          <a className="button" href={href.overview()}>
+            Terug naar het overzicht
           </a>
         </div>
       );
@@ -170,16 +172,16 @@ function WalletPicker() {
 function DeveloperSwitch() {
   const { developer, setDeveloper, blockNumber } = usePassport();
   return (
-    <div className="ontwikkelaar">
-      <label className="schakelaar">
+    <div className="developer">
+      <label className="switch">
         <input type="checkbox" role="switch" checked={developer} onChange={(e) => setDeveloper(e.target.checked)} />
-        <span className="schakelaar-baan" aria-hidden="true" />
+        <span className="switch-track" aria-hidden="true" />
         Ontwikkelaar
       </label>
       {developer && blockNumber !== null && (
-        <a className="blokteller" href={href.keten()} title="Hoogste blok van de keten, live bijgewerkt">
+        <a className="block-counter" href={href.chain()} title="Hoogste block van de Chain, live bijgewerkt">
           <span className="live" aria-hidden="true" />
-          blok #{blockNumber}
+          block #{blockNumber}
         </a>
       )}
     </div>
@@ -188,12 +190,12 @@ function DeveloperSwitch() {
 
 function NotStarted() {
   return (
-    <main className="niet-gestart">
-      <h1>BBM-paspoort</h1>
-      <p>De demo is nog niet gestart: er is geen uitgerold contract gevonden.</p>
+    <main className="not-started">
+      <h1>BBM passport</h1>
+      <p>De demo is niet gestart: er is geen gedeployed contract gevonden.</p>
       <p>Start de demo in een terminal in de projectmap:</p>
       <pre>npm run demo</pre>
-      <p className="stil">Dat start de lokale keten, de demodata, en daarna deze app.</p>
+      <p className="muted">Hiermee start je de lokale Chain, de demodata en daarna deze app.</p>
     </main>
   );
 }

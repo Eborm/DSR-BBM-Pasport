@@ -35,15 +35,19 @@ export interface ChainBlock {
 const decode = (inputs: readonly ParamType[], values: Result): Decoded[] =>
   inputs.map((type, index) => ({ name: type.name, type, value: values[index] }));
 
-/** Blocks `lowest` through `highest`, newest first. */
+export interface ChainContract {
+  interface: Interface;
+  address: string;
+}
+
+/** Blocks `lowest` through `highest`, newest first. Calls and events of every given contract are decoded. */
 export async function loadBlocks(
   provider: JsonRpcProvider,
-  contractInterface: Interface,
-  contractAddress: string,
+  contracts: ChainContract[],
   highest: number,
   lowest: number,
 ): Promise<ChainBlock[]> {
-  const isContract = (address: string | null) => address?.toLowerCase() === contractAddress.toLowerCase();
+  const find = (address: string | null) => contracts.find((c) => c.address.toLowerCase() === address?.toLowerCase());
   const numbers = Array.from({ length: highest - lowest + 1 }, (_, i) => highest - i);
 
   return Promise.all(
@@ -53,12 +57,13 @@ export async function loadBlocks(
       const txs = await Promise.all(
         block.prefetchedTransactions.map(async (tx): Promise<ChainTx> => {
           const receipt = await provider.getTransactionReceipt(tx.hash);
-          const call = isContract(tx.to) ? contractInterface.parseTransaction({ data: tx.data, value: tx.value }) : null;
-          const events = (receipt?.logs ?? [])
-            .filter((log) => isContract(log.address))
-            .map((log) => contractInterface.parseLog(log))
-            .filter((parsed) => parsed !== null)
-            .map((parsed) => ({ name: parsed.name, params: decode(parsed.fragment.inputs, parsed.args) }));
+          const target = find(tx.to);
+          const call = target ? target.interface.parseTransaction({ data: tx.data, value: tx.value }) : null;
+          const events = (receipt?.logs ?? []).flatMap((log) => {
+            const emitter = find(log.address);
+            const parsed = emitter?.interface.parseLog(log);
+            return parsed ? [{ name: parsed.name, params: decode(parsed.fragment.inputs, parsed.args) }] : [];
+          });
           return {
             hash: tx.hash,
             from: tx.from,

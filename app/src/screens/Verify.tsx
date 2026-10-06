@@ -47,9 +47,9 @@ export function Verify({ id }: { id?: bigint }) {
   if (!claims) {
     return (
       <div className="empty">
-        <h1>Verify document</h1>
+        <h1>Document controleren</h1>
         <p>
-          No ClaimRegistry is deployed. Stop the demo and start it again with <code>npm run demo</code>.
+          ClaimRegistry is niet gedeployed. Stop de demo en start hem opnieuw met <code>npm run demo</code>.
         </p>
       </div>
     );
@@ -57,15 +57,15 @@ export function Verify({ id }: { id?: bigint }) {
 
   return (
     <div className="form">
-      <h1>Verify document</h1>
+      <h1>Document controleren</h1>
       <p>
-        Choose a document to check whether a claim has been recorded for it
-        {id !== undefined ? ` for batch #${id.toString()}` : " for any batch"}. The file is hashed in your browser and
-        never leaves your device.
+        Kies een document om te controleren of dit in een claim is opgenomen
+        {id !== undefined ? ` voor batch #${id.toString()}` : " voor elke batch"}. Het bestand wordt in je browser gehashed
+        en verlaat nooit je apparaat.
       </p>
       {id !== undefined && (
         <p className="help">
-          <a href={href.verify()}>Search all batches</a>
+          <a href={href.verify()}>Zoek in alle batches</a>
         </p>
       )}
 
@@ -75,10 +75,10 @@ export function Verify({ id }: { id?: bigint }) {
       </label>
 
       <div className="outcome" aria-live="polite">
-        {busy && <p className="muted">Calculating hash…</p>}
-        {failed && <p className="field-error">This file could not be read. Choose it again.</p>}
+        {busy && <p className="muted">Hash berekenen…</p>}
+        {failed && <p className="field-error">Dit bestand kon niet worden gelezen. Kies opnieuw een bestand.</p>}
 
-        {hash && file && !snapshot && <p className="muted">Loading claims…</p>}
+        {hash && file && !snapshot && <p className="muted">Claims laden…</p>}
 
         {hash && file && snapshot && (
           <>
@@ -88,11 +88,11 @@ export function Verify({ id }: { id?: bigint }) {
                   <span className="verification-icon" aria-hidden="true">
                     ✓
                   </span>
-                  This document is recorded
+                  Dit document is opgenomen in de blockchain.
                 </p>
                 <p>
-                  The hash of {file.name} matches {matches.length === 1 ? "one claim" : `${matches.length} claims`} on the
-                  chain.
+                  De hash van {file.name} komt overeen met {matches.length === 1 ? "een claim" : `${matches.length} claims`} op de
+                  Chain.
                 </p>
               </div>
             ) : (
@@ -101,17 +101,16 @@ export function Verify({ id }: { id?: bigint }) {
                   <span className="verification-icon" aria-hidden="true">
                     ✕
                   </span>
-                  No claim found for this document
+                  Geen claim gevonden voor dit document.
                 </p>
                 <p>
-                  No claim has this hash. Either the document was never recorded, or the file has changed since then, even if
-                  only by a single character.
+                  Geen claim met deze hash. Het document is nooit opgenomen in de blockchain, of dit bestand is sindsdien gewijzigd.
                 </p>
               </div>
             )}
 
             <p className="computed-hash">
-              <span className="muted">Hash of {file.name} (keccak256)</span>
+              <span className="muted">Hash van {file.name} (keccak256)</span>
               <br />
               <HashValue value={hash} full />
             </p>
@@ -120,9 +119,9 @@ export function Verify({ id }: { id?: bigint }) {
               <ul className="recorded">
                 {matches.map((claim) => (
                   <li key={`${claim.batchId}-${claim.index}`}>
-                    <strong>{CLAIM_TYPE_LABEL[claim.claimType]}</strong> on{" "}
+                    <strong>{CLAIM_TYPE_LABEL[claim.claimType]}</strong> op{" "}
                     <a href={href.batch(claim.batchId)}>batch #{claim.batchId.toString()}</a> (claim #{claim.index}),{" "}
-                    {formatDateTime(claim.timestamp)}, by <Address value={claim.submitter} />{" "}
+                    {formatDateTime(claim.timestamp)}, door <Address value={claim.submitter} />{" "}
                     <ClaimRoleBadge role={claimRoleOf(claim.submitter)} />
                   </li>
                 ))}

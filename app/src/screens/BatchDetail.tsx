@@ -8,15 +8,15 @@ import { usePassport } from "../state";
 export function BatchDetail({ id }: { id: bigint }) {
   const { snapshot, claims, claimRole, claimRoleOf } = usePassport();
 
-  if (!snapshot) return <p className="muted">Loading...</p>;
+  if (!snapshot) return <p className="muted">Laden...</p>;
   const batch = snapshot.batches.get(id);
 
   if (!batch) {
     return (
       <div className="empty">
-        <h1>Batch #{id.toString()} not found</h1>
+        <h1>Batch #{id.toString()} niet gevonden</h1>
         <a className="button" href={href.overview()}>
-          Back to the overview
+          Terug naar het overzicht
         </a>
       </div>
     );
@@ -30,54 +30,54 @@ export function BatchDetail({ id }: { id: bigint }) {
         <h1>Batch #{batch.id.toString()}</h1>
         {claims && (
           <ActionButton permission={canAddAnyClaim(claimRole)} onClick={() => navigate(href.claim(batch.id))} primary>
-            Add claim
+            Claim toevoegen
           </ActionButton>
         )}
       </div>
 
       <dl className="details">
-        <dt>Producer</dt>
+        <dt>Producent</dt>
         <dd>{batch.producer}</dd>
 
-        <dt>Material type</dt>
+        <dt>Materiaalsoort</dt>
         <dd>{batch.materialType}</dd>
 
-        <dt>Classification</dt>
+        <dt>Classificatie</dt>
         <dd>{CLASSIFICATION_LABEL[batch.classification]}</dd>
 
-        <dt>Level</dt>
+        <dt>Niveau</dt>
         <dd>{LEVEL_LABEL[batch.level]}</dd>
 
-        <dt>Mass</dt>
+        <dt>Massa</dt>
         <dd>{batch.mass.toString()} kg</dd>
 
-        <dt>Origin</dt>
+        <dt>Herkomst</dt>
         <dd>{batch.origin || <span className="muted">–</span>}</dd>
 
-        <dt>Production date</dt>
+        <dt>Productiedatum</dt>
         <dd>{formatDateTime(batch.productionDate)}</dd>
 
-        <dt>Source</dt>
+        <dt>Bron</dt>
         <dd>{SOURCE_FILE_LABEL[batch.sourceFile]}</dd>
 
-        <dt>Current owner</dt>
+        <dt>Huidige eigenaar</dt>
         <dd>
           <Address value={batch.currentOwner} withRole />
         </dd>
 
-        <dt>Registered on</dt>
+        <dt>Geregistreerd op</dt>
         <dd>{formatDateTime(batch.registeredAt)}</dd>
       </dl>
 
       <section>
         <h2>Claims</h2>
         {!claims ? (
-          <p className="muted">No ClaimRegistry is deployed. Restart the demo with npm run demo.</p>
+          <p className="muted">ClaimRegistry is niet gedeployed. Start de demo opnieuw met npm run demo.</p>
         ) : list.length === 0 ? (
-          <p className="muted">No claims for this batch yet.</p>
+          <p className="muted">Deze batch heeft nog geen claims.</p>
         ) : (
           <>
-            <ol className="timeline" aria-label="Claims, newest first">
+            <ol className="timeline" aria-label="Claims, nieuwste eerst">
               {[...list].reverse().map((claim) => (
                 <li key={claim.index}>
                   <p className="line-header">
@@ -88,17 +88,17 @@ export function BatchDetail({ id }: { id: bigint }) {
                     <span className="muted">claim #{claim.index}</span>
                   </p>
                   <p className="line-actor">
-                    <span className="muted">by</span> <Address value={claim.submitter} />{" "}
+                    <span className="muted">door</span> <Address value={claim.submitter} />{" "}
                     <ClaimRoleBadge role={claimRoleOf(claim.submitter)} />
                   </p>
                   <div className="document">
-                    <span className="muted">Document hash</span> <HashValue value={claim.documentHash} />
+                    <span className="muted">Documenthash</span> <HashValue value={claim.documentHash} />
                   </div>
                 </li>
               ))}
             </ol>
             <p>
-              <a href={href.verify(batch.id)}>Check a document against these claims</a>
+              <a href={href.verify(batch.id)}>Controleer een document tegen deze claims</a>
             </p>
           </>
         )}

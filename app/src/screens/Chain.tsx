@@ -11,10 +11,10 @@ import { usePassport } from "../state";
 const PAGE = 15;
 
 const CALL_LABEL: Record<string, string> = {
-  registerBatch: "register batch",
-  assignRole: "assign role",
-  addClaim: "add claim",
-  setRole: "assign role (claims)",
+  registerBatch: "batch registreren",
+  assignRole: "rol toewijzen",
+  addClaim: "claim toevoegen",
+  setRole: "rol toewijzen (claims)",
 };
 
 /**
@@ -57,9 +57,9 @@ export function Chain({ focus }: { focus?: number }) {
     return (
       <div className="empty">
         <h1>Chain</h1>
-        <p>This screen is part of the developer view.</p>
+        <p>Dit scherm maakt deel uit van de ontwikkelaarsweergave.</p>
         <button type="button" className="button primary" onClick={() => setDeveloper(true)}>
-          Turn on developer view
+          Ontwikkelaarsweergave inschakelen
         </button>
       </div>
     );
@@ -83,9 +83,9 @@ export function Chain({ focus }: { focus?: number }) {
         </p>
       </div>
       <p>
-        All data in this app comes from the transactions below. Each block contains the hash of the previous block: anyone
-        who changes an old block changes its hash and breaks the chain from that point on. Rejected actions do not appear
-        here: the contract refuses them before they end up in a block.
+        Alle gegevens in deze app komen uit de onderstaande transacties. Elk block bevat de hash van het vorige block: wie
+        een oud block wijzigt, wijzigt de hash en verbreekt de Chain vanaf dat punt. Afgewezen acties verschijnen hier niet:
+        het contract weigert ze voordat ze in een block terechtkomen.
       </p>
 
       {error && (
@@ -95,7 +95,7 @@ export function Chain({ focus }: { focus?: number }) {
       )}
 
       {!blocks ? (
-        <div aria-busy="true" aria-label="Loading blocks">
+        <div aria-busy="true" aria-label="Blocks laden">
           {[0, 1, 2].map((i) => (
             <Skeleton key={i} height="7rem" />
           ))}
@@ -107,8 +107,8 @@ export function Chain({ focus }: { focus?: number }) {
               {intact ? "✔" : "✖"}
             </span>
             {intact
-              ? `Chain is intact: each of the ${blocks.length} blocks shown points to the previous one by its hash.`
-              : "Chain is broken: a block does not point to the hash of its predecessor."}
+              ? `Chain is intact: elk van de ${blocks.length} getoonde blocks verwijst via zijn hash naar het vorige block.`
+              : "Chain is broken: een block verwijst niet naar de hash van zijn voorganger."}
           </p>
           <ol className="blocks">
             {blocks.map((block, i) => (
@@ -123,7 +123,7 @@ export function Chain({ focus }: { focus?: number }) {
           {blocks[blocks.length - 1].number > 0 && (
             <div className="buttons">
               <button type="button" className="button" onClick={() => setCount(needed + PAGE)}>
-                Load older blocks
+                Oudere blocks laden
               </button>
             </div>
           )}
@@ -142,11 +142,11 @@ function BlockCard({ block, focused, linked }: { block: ChainBlock; focused: boo
         {block.number === 0 && <span className="label">genesis block</span>}
       </div>
       <dl className="hashes">
-        <dt>Hash of this block</dt>
+        <dt>Hash van dit block</dt>
         <dd>
           <HashValue value={block.hash} />
         </dd>
-        <dt>Hash of previous block</dt>
+        <dt>Hash van vorig block</dt>
         <dd>
           <HashValue value={block.parentHash} />
           {linked !== undefined && (
@@ -158,7 +158,7 @@ function BlockCard({ block, focused, linked }: { block: ChainBlock; focused: boo
         </dd>
       </dl>
       {block.txs.length === 0 ? (
-        <p className="muted">No transactions.</p>
+        <p className="muted">Geen transacties.</p>
       ) : (
         block.txs.map((tx) => <TxView key={tx.hash} tx={tx} />)
       )}
@@ -184,13 +184,13 @@ function TxView({ tx }: { tx: ChainTx }) {
     <div className="tx">
       <p className="tx-header">
         <strong>{title}</strong>
-        {!tx.ok && <span className="label">reverted</span>}
+        {!tx.ok && <span className="label">teruggedraaid</span>}
       </p>
       <p className="line-actor">
-        <span className="muted">signed by</span> <Address value={tx.from} withRole />
+        <span className="muted">ondertekend door</span> <Address value={tx.from} withRole />
         {tx.to && !toContract && (
           <>
-            <span className="muted">to</span> <Address value={tx.to} />
+            <span className="muted">naar</span> <Address value={tx.to} />
           </>
         )}
       </p>
@@ -202,7 +202,7 @@ function TxView({ tx }: { tx: ChainTx }) {
       {tx.call && tx.call.params.length > 0 && <Params params={tx.call.params} />}
       {tx.events.length > 0 && (
         <details>
-          <summary>Emitted events ({tx.events.map((e) => e.name).join(", ")})</summary>
+          <summary>Uitgestuurde events ({tx.events.map((e) => e.name).join(", ")})</summary>
           {tx.events.map((event, i) => (
             <div key={i} className="event">
               <p className="event-name">{event.name}</p>

@@ -29,11 +29,11 @@ function Copyable({ value, short, label, wrap = false }: { value: string; short:
   return (
     <span className={wrap ? "copyable full" : "copyable"}>
       <code title={value}>{short}</code>
-      <button type="button" className="copy" onClick={copy} aria-label={`Copy ${label}`} title={`Copy ${label}`}>
+      <button type="button" className="copy" onClick={copy} aria-label={`${label} kopiëren`} title={`${label} kopiëren`}>
         {copied ? <span aria-hidden="true">✓</span> : <CopyIcon />}
       </button>
       <span className="sr" aria-live="polite">
-        {copied ? `${label} copied` : ""}
+        {copied ? `${label} gekopieerd` : ""}
       </span>
     </span>
   );
@@ -46,7 +46,7 @@ export function Address({ value, withRole = false }: { value: string; withRole?:
   return (
     <span className="address">
       {name && <span className="address-name">{name}</span>}
-      <Copyable value={value} short={shortAddress(value)} label="address" />
+      <Copyable value={value} short={shortAddress(value)} label="adres" />
       {withRole && <RoleBadge role={role} />}
     </span>
   );
@@ -57,13 +57,13 @@ export function HashValue({ value, full = false }: { value: string; full?: boole
   return <Copyable value={value} short={full ? value : shortHash(value)} label="hash" wrap={full} />;
 }
 
-export function RoleBadge({ role, empty = "no role" }: { role: Role | undefined; empty?: string }) {
+export function RoleBadge({ role, empty = "geen rol" }: { role: Role | undefined; empty?: string }) {
   if (role === undefined) return <span className="role none">{empty}</span>;
   return <span className="role">{ROLE_LABEL[role]}</span>;
 }
 
 /** Role according to ClaimRegistry, which keeps its own roles apart from MaterialPassport. */
-export function ClaimRoleBadge({ role, empty = "no role" }: { role: ClaimRole | undefined; empty?: string }) {
+export function ClaimRoleBadge({ role, empty = "geen rol" }: { role: ClaimRole | undefined; empty?: string }) {
   if (role === undefined) return <span className="role none">{empty}</span>;
   return <span className="role">{CLAIM_ROLE_LABEL[role]}</span>;
 }
@@ -73,7 +73,7 @@ export function NotImplemented({ what }: { what: string }) {
   return (
     <div className="empty">
       <h1>{what}</h1>
-      <p>This functionality is not in the contract yet. It will follow in a later iteration.</p>
+      <p>Deze functionaliteit zit nog niet in het contract. Dit volgt in een latere versie.</p>
     </div>
   );
 }
@@ -117,7 +117,7 @@ export function SubmitButton({
   pending,
   disabled = false,
   children,
-  pendingLabel = "Transaction in progress…",
+  pendingLabel = "Transactie wordt uitgevoerd…",
 }: {
   pending: boolean;
   disabled?: boolean;
@@ -140,7 +140,7 @@ export function SubmitButton({
 
 // ------------------------------------------------------------ Notifications
 
-export function ErrorBox({ error, title = "Transaction rejected" }: { error: Explained; title?: string }) {
+export function ErrorBox({ error, title = "Transactie afgewezen" }: { error: Explained; title?: string }) {
   return (
     <div className="error-box" role="alert">
       <p>
@@ -149,7 +149,7 @@ export function ErrorBox({ error, title = "Transaction rejected" }: { error: Exp
       </p>
       {error.technical && (
         <details>
-          <summary>Technical details</summary>
+          <summary>Technische details</summary>
           <p className="muted">{error.technical}</p>
         </details>
       )}
@@ -171,7 +171,7 @@ export interface Step {
   detail?: ReactNode;
 }
 
-const STEP_LABEL: Record<StepState, string> = { waiting: "waiting", busy: "in progress…", done: "done", failed: "failed" };
+const STEP_LABEL: Record<StepState, string> = { waiting: "wachten", busy: "bezig…", done: "voltooid", failed: "mislukt" };
 const STEP_ICON: Record<StepState, string> = { waiting: "", busy: "…", done: "✓", failed: "!" };
 
 /** Makes the order save → hash → transaction visible (§6.2 D). */

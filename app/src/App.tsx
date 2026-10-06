@@ -58,28 +58,28 @@ function Layout() {
           main.current?.focus();
         }}
       >
-        Skip to content
+        Ga naar inhoud
       </a>
       <header className="topbar">
         <a className="brand" href={href.overview()}>
-          BBM passport
+          BBM-paspoort
         </a>
-        <nav aria-label="Main menu">
+        <nav aria-label="Hoofdmenu">
           <a href={href.overview()} aria-current={active("overview")}>
-            Overview
+            Overzicht
           </a>
           <a href={href.register()} aria-current={active("register")}>
-            Register
+            Registreren
           </a>
           <a href={href.scan()} aria-current={active("scan")}>
-            Scan
+            Scannen
           </a>
           <a href={href.verify()} aria-current={active("verify")}>
-            Verify
+            Controleren
           </a>
           {developer && (
             <a href={href.chain()} aria-current={active("chain")}>
-              Chain
+              Keten
             </a>
           )}
         </nav>
@@ -90,10 +90,10 @@ function Layout() {
       {error && (
         <div className="connection" role="alert">
           <p>
-            <strong>No connection to the chain.</strong> {error}
+            <strong>Geen verbinding met de keten.</strong> {error}
           </p>
           <button type="button" className="button small" onClick={() => void reload()}>
-            Try again
+            Opnieuw proberen
           </button>
         </div>
       )}
@@ -146,7 +146,7 @@ function WalletPicker() {
       <label>
         <span className="wallet-label">Account</span>
         <select value={account?.address ?? ""} onChange={(e) => selectAccount(e.target.value || null)}>
-          <option value="">No account (read only)</option>
+          <option value="">Geen account (alleen lezen)</option>
           {deployment.accounts.map((a) => (
             <option key={a.address} value={a.address}>
               {a.name}

@@ -106,14 +106,14 @@ export interface Permission {
 const ALLOWED: Permission = { allowed: true };
 const NO_ACCOUNT: Permission = {
   allowed: false,
-  reason: "No account selected. Choose an account at the top to perform actions.",
+  reason: "Geen account geselecteerd. Kies bovenaan een account om acties uit te voeren.",
 };
 
 /** `role` is `null` if no account is chosen. */
 export function canRegister(role: Role | null): Permission {
   if (role === null) return NO_ACCOUNT;
   if (role !== Role.Manufacturer) {
-    return { allowed: false, reason: "Only an account with the Manufacturer role can register batches." };
+    return { allowed: false, reason: "Alleen een account met de rol Manufacturer kan batches registreren." };
   }
   return ALLOWED;
 }

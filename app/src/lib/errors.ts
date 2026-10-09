@@ -1,10 +1,9 @@
 /**
  * Translates a rejected transaction into plain language.
  *
- * MaterialPassport uses require() strings, which ethers.js already returns via
- * `reason` or `shortMessage`. ClaimRegistry uses custom errors (NotAllowed,
- * EmptyHash, NotAdmin); those arrive as raw revert data that has to be decoded
- * with the contract's own interface, so pass that in as `contractInterface`.
+ * MaterialPassport uses custom errors (WrongRole, NotAllowed, EmptyHash, ...).
+ * Those arrive as raw revert data that has to be decoded with the contract's
+ * own interface, so pass that in as `contractInterface`.
  */
 import type { Interface } from "ethers";
 import { CLAIM_TYPE_LABEL, allowedRolesLabel, type ClaimType } from "./domain";
@@ -38,6 +37,20 @@ function explainCustomError(name: string, args: readonly unknown[]): string | nu
       return "Het document heeft geen geldige hash. Kies een bestand of voer een hash in.";
     case "NotAdmin":
       return "Alleen de administrator kan rollen toewijzen.";
+    case "WrongRole":
+      return "Dit account heeft niet de juiste rol voor deze actie.";
+    case "EmptyProducer":
+      return "De producent mag niet leeg zijn.";
+    case "EmptyMaterialType":
+      return "De materiaalsoort mag niet leeg zijn.";
+    case "EmptyOrigin":
+      return "De herkomst mag niet leeg zijn.";
+    case "InvalidMass":
+      return "De massa moet groter zijn dan nul.";
+    case "InvalidProductionDate":
+      return "De productiedatum mag niet in de toekomst liggen.";
+    case "BatchNotFound":
+      return `Batch #${String(args[0])} bestaat niet.`;
     default:
       return null;
   }

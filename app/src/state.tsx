@@ -3,21 +3,18 @@ import { Contract, type JsonRpcProvider } from "ethers";
 import {
   connect,
   loadSnapshot,
-  writableClaims,
   writableContract,
   type DemoAccount,
   type Deployment,
   type Snapshot,
 } from "./lib/chain";
-import type { ClaimRole, Role } from "./lib/domain";
+import type { Role } from "./lib/domain";
 
 interface PassportContextValue {
   deployment: Deployment;
   provider: JsonRpcProvider;
   /** Read-only connection; available to everyone, even without a chosen account. */
   contract: Contract;
-  /** Read-only connection to ClaimRegistry, or `null` if the demo was started without it. */
-  claims: Contract | null;
   snapshot: Snapshot | null;
   error: string | null;
   reload: () => Promise<void>;
@@ -27,15 +24,10 @@ interface PassportContextValue {
   selectAccount: (address: string | null) => void;
   /** Role of the chosen account, or `null` if no account is chosen. */
   role: Role | null;
-  /** Role of the chosen account in ClaimRegistry (separate from `role`), or `null` if no account is chosen. */
-  claimRole: ClaimRole | null;
   /** Contract with which the chosen account signs transactions. */
   writer: () => Promise<Contract>;
-  /** ClaimRegistry with which the chosen account signs transactions. */
-  claimWriter: () => Promise<Contract>;
   nameOf: (address: string) => string | undefined;
   roleOf: (address: string) => Role | undefined;
-  claimRoleOf: (address: string) => ClaimRole | undefined;
   /** Developer view: makes block/transaction details visible (Chain screen). */
   developer: boolean;
   setDeveloper: (on: boolean) => void;
@@ -71,7 +63,7 @@ function writeSetting(key: string, value: string | null) {
 }
 
 export function PassportProvider({ deployment, children }: { deployment: Deployment; children: ReactNode }) {
-  const { provider, contract, claims } = useMemo(() => connect(deployment), [deployment]);
+  const { provider, contract } = useMemo(() => connect(deployment), [deployment]);
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [blockNumber, setBlockNumber] = useState<number | null>(null);
@@ -82,7 +74,7 @@ export function PassportProvider({ deployment, children }: { deployment: Deploym
   const reload = useCallback(async () => {
     const mine = ++sequence.current;
     try {
-      const next = await loadSnapshot(contract, claims, deployment);
+      const next = await loadSnapshot(contract, deployment);
       if (mine === sequence.current) {
         setSnapshot(next);
         setError(null);
@@ -90,7 +82,7 @@ export function PassportProvider({ deployment, children }: { deployment: Deploym
     } catch (e) {
       if (mine === sequence.current) setError(e instanceof Error ? e.message : String(e));
     }
-  }, [contract, claims, deployment]);
+  }, [contract, deployment]);
 
   // Poll the block number every second and reload on a new block, so an
   // action from another window or account becomes visible right away.
@@ -131,7 +123,6 @@ export function PassportProvider({ deployment, children }: { deployment: Deploym
   }, []);
 
   const roleOf = useCallback((a: string) => snapshot?.roles.get(a.toLowerCase()), [snapshot]);
-  const claimRoleOf = useCallback((a: string) => snapshot?.claimRoles.get(a.toLowerCase()), [snapshot]);
   const nameOf = useCallback(
     (a: string) => deployment.accounts.find((account) => account.address.toLowerCase() === a.toLowerCase())?.name,
     [deployment],
@@ -141,7 +132,6 @@ export function PassportProvider({ deployment, children }: { deployment: Deploym
     deployment,
     provider,
     contract,
-    claims,
     snapshot,
     error,
     reload,
@@ -149,18 +139,12 @@ export function PassportProvider({ deployment, children }: { deployment: Deploym
     account,
     selectAccount,
     role: account ? (roleOf(account.address) ?? null) : null,
-    claimRole: account ? (claimRoleOf(account.address) ?? null) : null,
     writer: async () => {
       if (!account) throw new Error("No account chosen.");
       return writableContract(provider, account.address, deployment);
     },
-    claimWriter: async () => {
-      if (!account) throw new Error("No account chosen.");
-      return writableClaims(provider, account.address, deployment);
-    },
     nameOf,
     roleOf,
-    claimRoleOf,
     developer,
     setDeveloper,
   };

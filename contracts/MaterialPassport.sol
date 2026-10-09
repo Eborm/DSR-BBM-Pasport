@@ -2,6 +2,7 @@
 pragma solidity ^0.8.34;
 
 contract MaterialPassport {
+    // Enums
     enum Role { 
         Viewer, 
         Manufacturer, 
@@ -33,6 +34,13 @@ contract MaterialPassport {
         DemolitionInventory
     }
 
+    enum ClaimType { 
+        StatusChange, 
+        LocationChange, 
+        QualityDeclaration
+    }
+
+    // Structs
     struct Batch {
         uint256 id;
         string producer;
@@ -47,32 +55,81 @@ contract MaterialPassport {
         SourceFile sourceFile;
     }
 
-    mapping(address => Role) public roles;
-    address public admin;
+    struct Claim {
+        uint256 batchId;
+        address submitter;
+        bytes32 documentHash;
+        uint64 timestamp;
+        ClaimType claimType;
+    }
 
+    // Events & error handling
+    event BatchRegistered(
+        uint256 indexed batchId, 
+        address indexed registeredBy,
+        uint256 timestamp
+    );
+
+    event ClaimAdded(
+        uint256 indexed batchId,
+        uint256 indexed claimIndex,
+        address indexed submitter,
+        bytes32 documentHash,
+        ClaimType claimType
+    );
+
+    error NotAdmin();
+    error WrongRole();
+    error NotAllowed(address account, ClaimType claimType);
+    error EmptyProducer();
+    error EmptyMaterialType();
+    error EmptyOrigin();
+    error InvalidMass();
+    error InvalidProductionDate();
+    error BatchNotFound(uint256 batchId);
+    error EmptyHash();
+
+    // Storage
+    address public admin;
+    uint256 public batchCount;
+    mapping(uint256 => Batch) public batches;
+    mapping(address => Role) public roles;
+    mapping(uint256 => Claim[]) private claimsByBatch;
+
+    // Role management
     constructor() {
         admin = msg.sender;
     }
 
-    modifier onlyRole(Role _role) {
-        require(roles[msg.sender] == _role, "Caller does not have the required role");
-        _;
-    }
-
     modifier onlyAdmin() {
-        require(msg.sender == admin, "Only admin can assign roles");
+        if (msg.sender != admin) revert NotAdmin();
         _;
     }
 
-    function assignRole(address _account, Role _role) public onlyAdmin {
+    modifier onlyRole(Role _role) {
+        if (roles[msg.sender] != _role) revert WrongRole();
+        _;
+    }
+
+    modifier mayClaim(ClaimType claimType) {
+        Role role = roles[msg.sender];
+        if (claimType == ClaimType.QualityDeclaration) {
+            if (role != Role.Inspector) revert NotAllowed(msg.sender, claimType);
+        } 
+        else if (claimType == ClaimType.LocationChange) {
+            if (role != Role.Owner) revert NotAllowed(msg.sender, claimType);
+        } 
+        else {
+            if (role != Role.Owner && role != Role.Demolisher) revert NotAllowed(msg.sender, claimType);
+        }
+        _;
+    }
+
+    function setRole(address _account, Role _role) public onlyAdmin {
         roles[_account] = _role;
     }
 
-    mapping(uint256 => Batch) public batches;
-    uint256 public batchCount;
-
-    event BatchRegistered(uint256 indexed batchId, address indexed registeredBy, uint256 timestamp);
-
+    // Register batches
     function registerBatch(
         string memory _producer,
         Classification _classification,
@@ -83,7 +140,11 @@ contract MaterialPassport {
         uint256 _productionDate,
         SourceFile _sourceFile
     ) public onlyRole(Role.Manufacturer) returns (uint256) {
-        _validateBatchInput(_producer, _materialType, _mass, _origin, _productionDate);
+        if (bytes(_producer).length == 0) revert EmptyProducer();
+        if (bytes(_materialType).length == 0) revert EmptyMaterialType();
+        if (bytes(_origin).length == 0) revert EmptyOrigin();
+        if (_mass == 0) revert InvalidMass();
+        if (_productionDate > block.timestamp) revert InvalidProductionDate();
 
         batchCount++;
         uint256 _id = batchCount;
@@ -108,17 +169,34 @@ contract MaterialPassport {
         return _id;
     }
 
-    function _validateBatchInput(
-        string memory _producer,
-        string memory _materialType,
-        uint256 _mass,
-        string memory _origin,
-        uint256 _productionDate
-    ) private view {
-        require(bytes(_producer).length > 0, "Producer cannot be empty");
-        require(bytes(_materialType).length > 0, "Material type cannot be empty");
-        require(bytes(_origin).length > 0, "Origin cannot be empty");
-        require(_mass > 0, "Mass must be greater than zero");
-        require(_productionDate <= block.timestamp, "Production date cannot be in the future");
+    // Claims
+    function addClaim(
+        uint256 batchId,
+        ClaimType claimType,
+        bytes32 documentHash
+    ) external mayClaim(claimType) returns (uint256 claimIndex) {
+        if (batches[batchId].id == 0) revert BatchNotFound(batchId);
+        if (documentHash == bytes32(0)) revert EmptyHash();
+
+        claimIndex = claimsByBatch[batchId].length;
+        claimsByBatch[batchId].push(
+            Claim({
+                batchId: batchId,
+                submitter: msg.sender,
+                documentHash: documentHash,
+                timestamp: uint64(block.timestamp),
+                claimType: claimType
+            })
+        );
+
+        emit ClaimAdded(batchId, claimIndex, msg.sender, documentHash, claimType);
+    }
+
+    function getClaims(uint256 batchId) external view returns (Claim[] memory) {
+        return claimsByBatch[batchId];
+    }
+
+    function getClaimCount(uint256 batchId) external view returns (uint256) {
+        return claimsByBatch[batchId].length;
     }
 }

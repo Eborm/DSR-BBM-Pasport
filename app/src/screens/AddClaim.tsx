@@ -15,7 +15,7 @@ import { usePassport } from "../state";
 
 /** Screen D: add a claim to a batch. The document itself stays in the browser; only its hash goes on the chain. */
 export function AddClaim({ id }: { id: bigint }) {
-  const { snapshot, claims, claimRole, claimWriter, reload } = usePassport();
+  const { snapshot, contract, role, writer, reload } = usePassport();
   const [type, setType] = useState<ClaimType>(ClaimType.StatusChange);
   const [file, setFile] = useState<File | null>(null);
   const [fileHash, setFileHash] = useState<string | null>(null);
@@ -28,12 +28,12 @@ export function AddClaim({ id }: { id: bigint }) {
   const [added, setAdded] = useState<{ index: number; hash: string; tx: string } | null>(null);
 
   // Start on a claim type the chosen account may actually add.
-  const allowedTypes = claimTypesFor(claimRole);
+  const allowedTypes = claimTypesFor(role);
   useEffect(() => {
     if (allowedTypes.length > 0 && !allowedTypes.includes(type)) setType(allowedTypes[0]);
     // Only when the account (and so the role) changes, not on every choice of type.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [claimRole]);
+  }, [role]);
 
   // A chosen file wins over a typed hash.
   const hash = fileHash ?? (manualHash.trim() ? manualHash.trim().toLowerCase() : null);
@@ -44,7 +44,7 @@ export function AddClaim({ id }: { id: bigint }) {
     return null;
   }, [hash]);
 
-  const permission = canAddClaim(claimRole, type);
+  const permission = canAddClaim(role, type);
   const batch = snapshot?.batches.get(id);
   const existing = hash && !hashProblem ? snapshot?.claims.get(id)?.find((c) => c.documentHash.toLowerCase() === hash) : undefined;
 
@@ -66,7 +66,7 @@ export function AddClaim({ id }: { id: bigint }) {
   async function submit(event: FormEvent) {
     event.preventDefault();
     setFailure(null);
-    if (!claims || !hash || hashProblem || !permission.allowed) return;
+    if (!hash || hashProblem || !permission.allowed) return;
 
     const update = (index: number, step: Partial<Step>) =>
       setSteps((current) => current.map((s, i) => (i === index ? { ...s, ...step } : s)));
@@ -74,13 +74,13 @@ export function AddClaim({ id }: { id: bigint }) {
     setPending(true);
 
     try {
-      const registry = await claimWriter();
+      const registry = await writer();
       const tx = await registry.addClaim(id, type, hash);
       const receipt = await tx.wait();
       const claimEvent = receipt?.logs
         .map((log: any) => {
           try {
-            return claims.interface.parseLog(log);
+            return contract.interface.parseLog(log);
           } catch {
             return null;
           }
@@ -95,7 +95,7 @@ export function AddClaim({ id }: { id: bigint }) {
       });
     } catch (error) {
       update(0, { state: "failed" });
-      setFailure(explainError(error, claims.interface));
+      setFailure(explainError(error, contract.interface));
     } finally {
       setPending(false);
     }
@@ -110,17 +110,6 @@ export function AddClaim({ id }: { id: bigint }) {
         <a className="button" href={href.overview()}>
           Terug naar het overzicht
         </a>
-      </div>
-    );
-  }
-
-  if (!claims) {
-    return (
-      <div className="empty">
-        <h1>Claim toevoegen</h1>
-        <p>
-          ClaimRegistry is niet gedeployed. Stop de demo en start hem opnieuw met <code>npm run demo</code>.
-        </p>
       </div>
     );
   }

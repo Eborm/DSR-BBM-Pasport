@@ -8,22 +8,22 @@ const ClassificationEnum = { A1: 0, A2: 1, B: 2, C: 3, D: 4, E: 5, F: 6 };
 const LevelEnum = { RawMaterial: 0, Product: 1, Component: 2, BuildingElement: 3 };
 const SourceFileEnum = { Bim: 0, InspectionReport: 1, DemolitionInventory: 2 };
 
-describe("MaterialPassport", function () {
+describe("BatchRegistry", function () {
   // Deploy the MaterialPassport contract before each test
   // owner is a Viewer and manu is a Manufacturer 
   let registry: any;
   let owner: any;
-  let manu: any;
+  let manufacturer: any;
   
   beforeEach(async function () {
     registry = await ethers.deployContract("MaterialPassport");
-    [owner, manu] = await ethers.getSigners();
-    await registry.assignRole(manu.address, RoleEnum.Manufacturer);
+    [owner, manufacturer] = await ethers.getSigners();
+    await registry.setRole(manufacturer.address, RoleEnum.Manufacturer);
   });
 
   it("registers a batch and stores the given values", async function () {
     // 1. execute registerBatch with testvalues
-    const transaction = await registry.connect(manu).registerBatch(
+    const transaction = await registry.connect(manufacturer).registerBatch(
       "Test Producer",
       ClassificationEnum.A1,
       "Wood",
@@ -50,7 +50,7 @@ describe("MaterialPassport", function () {
 
   it("The autoimplemented fields should be set correctly", async function () {
     // Register batch
-    const transaction = await registry.connect(manu).registerBatch(
+    const transaction = await registry.connect(manufacturer).registerBatch(
       "Test Producer",
       ClassificationEnum.A1,
       "Wood",
@@ -68,13 +68,13 @@ describe("MaterialPassport", function () {
 
     // Check that the autoimplemented fields are correctly set
     expect(batch.id).to.equal(id);
-    expect(batch.currentOwner).to.equal(manu.address);
+    expect(batch.currentOwner).to.equal(manufacturer.address);
     expect(batch.registeredAt).to.greaterThan(0n);
   });
 
   it("The event should be emitted when a batch is registered", async function () {
     // Register batch
-    const transaction = await registry.connect(manu).registerBatch(
+    const transaction = await registry.connect(manufacturer).registerBatch(
       "Test Producer",
       ClassificationEnum.A1,
       "Wood",
@@ -96,7 +96,7 @@ describe("MaterialPassport", function () {
 
   it("A second batch should have a different id than the first batch", async function () {
     // Register first batch
-    const transaction1 = await registry.connect(manu).registerBatch(
+    const transaction1 = await registry.connect(manufacturer).registerBatch(
       "Test Producer 1",
       ClassificationEnum.A1,
       "Wood",
@@ -113,7 +113,7 @@ describe("MaterialPassport", function () {
     const batch1 = await registry.batches(id1);
 
     // Register second batch
-    const transaction2 = await registry.connect(manu).registerBatch(
+    const transaction2 = await registry.connect(manufacturer).registerBatch(
       "Test Producer 2",
       ClassificationEnum.A2,
       "Metal",
@@ -134,7 +134,7 @@ describe("MaterialPassport", function () {
   });
 
   it("Should not register a batch with invalid input", async function () {
-    const transaction = registry.connect(manu).registerBatch(
+    const transaction = registry.connect(manufacturer).registerBatch(
       "",
       ClassificationEnum.A1, 
       "Wood", 
@@ -145,7 +145,7 @@ describe("MaterialPassport", function () {
       SourceFileEnum.Bim
     );
     
-    await expect(transaction).to.be.revertedWith("Producer cannot be empty");
+    await expect(transaction).to.be.revertedWithCustomError(registry, "EmptyProducer");
   });
 
   it("Should not register a batch if the user does not have the correct permissions", async function () {
@@ -160,6 +160,6 @@ describe("MaterialPassport", function () {
         SourceFileEnum.Bim
     );
 
-    await expect(transaction).to.be.revertedWith("Caller does not have the required role");
+    await expect(transaction).to.be.revertedWithCustomError(registry, "WrongRole");
   });
 });

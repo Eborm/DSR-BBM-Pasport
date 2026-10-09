@@ -84,7 +84,7 @@ export function Register() {
       setRegistered(event ? (event.args.batchId as bigint) : await contract.batchCount());
     } catch (error) {
       update(0, { state: "failed" });
-      setFailure(explainError(error));
+      setFailure(explainError(error, contract.interface));
     } finally {
       setPending(false);
     }

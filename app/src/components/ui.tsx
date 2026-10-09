@@ -1,5 +1,5 @@
 import { useId, useState, type ReactNode } from "react";
-import { CLAIM_ROLE_LABEL, ROLE_LABEL, type ClaimRole, type Permission, type Role } from "../lib/domain";
+import { ROLE_LABEL, type Permission, type Role } from "../lib/domain";
 import type { Explained } from "../lib/errors";
 import { shortAddress, shortHash } from "../lib/format";
 import { usePassport } from "../state";
@@ -60,12 +60,6 @@ export function HashValue({ value, full = false }: { value: string; full?: boole
 export function RoleBadge({ role, empty = "geen rol" }: { role: Role | undefined; empty?: string }) {
   if (role === undefined) return <span className="role none">{empty}</span>;
   return <span className="role">{ROLE_LABEL[role]}</span>;
-}
-
-/** Role according to ClaimRegistry, which keeps its own roles apart from MaterialPassport. */
-export function ClaimRoleBadge({ role, empty = "geen rol" }: { role: ClaimRole | undefined; empty?: string }) {
-  if (role === undefined) return <span className="role none">{empty}</span>;
-  return <span className="role">{CLAIM_ROLE_LABEL[role]}</span>;
 }
 
 /** Message for functionality that is not yet in the contract. */

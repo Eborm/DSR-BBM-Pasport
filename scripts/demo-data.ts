@@ -51,6 +51,8 @@ async function main() {
   await (await registry.connect(inspector).addClaim(1, 2 /* QualityDeclaration */, ethers.keccak256(report))).wait();
   await (await registry.connect(owner).addClaim(1, 1 /* LocationChange */, hashOf("Transport document to construction site Heerlen"))).wait();
   await (await registry.connect(inspector).addClaim(2, 2 /* QualityDeclaration */, hashOf("Inspection report hollow-core slab C45/55"))).wait();
+  
+  await (await registry.connect(manufacturer).transferOwnership(1, owner.address, hashOf("buy agreement for batch 1"))).wait();
 
   const accounts = [
     { address: admin.address, name: "Administrator", role: "Admin" },

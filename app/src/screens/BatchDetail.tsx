@@ -28,9 +28,14 @@ export function BatchDetail({ id }: { id: bigint }) {
     <>
       <div className="heading-row">
         <h1>Batch #{batch.id.toString()}</h1>
-        <ActionButton permission={canAddAnyClaim(role)} onClick={() => navigate(href.claim(batch.id))} primary>
-          Claim toevoegen
-        </ActionButton>
+        <div>
+          <ActionButton permission={canAddAnyClaim(role)} onClick={() => navigate(href.claim(batch.id))} primary>
+            Claim toevoegen
+          </ActionButton>
+          <button onClick={() => navigate(href.timeline(batch.id))}>
+            Tijdlijn bekijken
+          </button>
+        </div>
       </div>
 
       <dl className="details">

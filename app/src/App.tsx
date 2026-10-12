@@ -9,6 +9,7 @@ import { Chain } from "./screens/Chain";
 import { Overview } from "./screens/Overview";
 import { Register } from "./screens/Register";
 import { Verify } from "./screens/Verify";
+import { Timeline } from "./screens/Timeline";
 import { PassportProvider, usePassport } from "./state";
 
 export function App() {
@@ -123,6 +124,8 @@ function Screen({ route }: { route: ReturnType<typeof parseRoute> }) {
       return <Verify key={route.id?.toString() ?? "all"} id={route.id} />;
     case "chain":
       return <Chain focus={route.block} />;
+    case "timeline":
+      return <Timeline key={route.id.toString()} id={route.id} />;
     default:
       return (
         <div className="empty">

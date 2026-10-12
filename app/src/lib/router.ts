@@ -10,6 +10,7 @@ export type Route =
   | { screen: "scan" }
   | { screen: "verify"; id?: bigint }
   | { screen: "chain"; block?: number }
+  | { screen: "timeline"; id: bigint }
   | { screen: "unknown" };
 
 export function parseRoute(hash: string): Route {
@@ -31,6 +32,9 @@ export function parseRoute(hash: string): Route {
       if (parts[2] === "claim") return { screen: "claim", id };
       if (parts[2] === "transfer" || parts[2] === "split") return { screen: "transfer", id, mode: parts[2] };
       return { screen: "batch", id };
+    case "timeline":
+      if (id === undefined) return { screen: "unknown" };
+      return { screen: "timeline", id };
     default:
       return { screen: "unknown" };
   }
@@ -46,6 +50,7 @@ export const href = {
   scan: () => "#/scan",
   verify: (id?: bigint) => (id === undefined ? "#/verify" : `#/verify/${id}`),
   chain: (block?: number) => (block === undefined ? "#/chain" : `#/chain/${block}`),
+  timeline: (id: bigint) => `#/timeline/${id}`,
 };
 
 export const navigate = (target: string) => {

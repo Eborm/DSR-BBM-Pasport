@@ -1,5 +1,7 @@
 export enum ClaimType {
     StatusChange,
     LocationChange,
-    QualityDeclaration
+    QualityDeclaration,
+    Registration,
+    OwnershipTransfer
 }

@@ -1,14 +1,15 @@
 import { useState, type FormEvent } from "react";
 import { QrCode } from "../components/QrCode";
-import { ErrorBox, Skeleton, Steps, SubmitButton, type Step } from "../components/ui";
+import { ErrorBox, HashValue, Skeleton, Steps, SubmitButton, type Step } from "../components/ui";
 import { canRegister, CLASSIFICATION_LABEL, LEVELS, SOURCE_FILE_LABEL } from "../lib/domain";
 import { Classification, Level, SourceFile } from "../lib/domain";
 import { explainError, type Explained } from "../lib/errors";
 import { secondsFromDateInput } from "../lib/format";
+import { hashFile } from "../lib/hash";
 import { href } from "../lib/router";
 import { usePassport } from "../state";
 
-type Field = "producer" | "materialType" | "mass" | "origin" | "productionDate";
+type Field = "producer" | "materialType" | "mass" | "origin" | "productionDate" | "document";
 
 const EMPTY = {
   producer: "",
@@ -23,7 +24,7 @@ const EMPTY = {
 
 /** Screen C: register a batch. */
 export function Register() {
-  const { role, writer, reload, snapshot, contract } = usePassport();
+  const { role, writer, reload, snapshot, contract, claims } = usePassport();
   const permission = canRegister(role);
   const [form, setForm] = useState(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
@@ -31,8 +32,28 @@ export function Register() {
   const [pending, setPending] = useState(false);
   const [failure, setFailure] = useState<Explained | null>(null);
   const [registered, setRegistered] = useState<bigint | null>(null);
+  // The source document is hashed in the browser; only its hash goes on the chain (as the Registration claim).
+  const [file, setFile] = useState<File | null>(null);
+  const [fileHash, setFileHash] = useState<string | null>(null);
+  const [hashing, setHashing] = useState(false);
+  const [hashError, setHashError] = useState<string | null>(null);
 
   const set = (field: keyof typeof EMPTY) => (value: string) => setForm((f) => ({ ...f, [field]: value }));
+
+  async function chooseFile(next: File | null) {
+    setFile(next);
+    setFileHash(null);
+    setHashError(null);
+    if (!next) return;
+    setHashing(true);
+    try {
+      setFileHash(await hashFile(next));
+    } catch {
+      setHashError("This file could not be read. Choose it again.");
+    } finally {
+      setHashing(false);
+    }
+  }
 
   function validate() {
     const found: Partial<Record<Field, string>> = {};
@@ -41,6 +62,7 @@ export function Register() {
     if (!/^\d+$/.test(form.mass) || BigInt(form.mass) === 0n) found.mass = "Voer een gehele massa groter dan nul in.";
     if (!form.origin.trim()) found.origin = "Voer een herkomst in.";
     if (!form.productionDate) found.productionDate = "Kies een productiedatum.";
+    if (!fileHash) found.document = hashing ? "Wait until the file has been hashed." : "Choose the source document.";
     setErrors(found);
     return Object.keys(found).length === 0;
   }
@@ -48,7 +70,7 @@ export function Register() {
   async function submit(event: FormEvent) {
     event.preventDefault();
     setFailure(null);
-    if (!validate()) return;
+    if (!validate() || !fileHash) return;
 
     const plan: Step[] = [{ title: "Transactie verzenden", state: "waiting" }];
     const update = (index: number, step: Partial<Step>) =>
@@ -68,6 +90,7 @@ export function Register() {
         form.origin.trim(),
         BigInt(secondsFromDateInput(form.productionDate)),
         Number(form.sourceFile),
+        fileHash,
       );
       const receipt = await tx.wait();
       const event = receipt?.logs
@@ -84,7 +107,7 @@ export function Register() {
       setRegistered(event ? (event.args.batchId as bigint) : await contract.batchCount());
     } catch (error) {
       update(0, { state: "failed" });
-      setFailure(explainError(error));
+      setFailure(explainError(error, claims?.interface));
     } finally {
       setPending(false);
     }
@@ -112,6 +135,8 @@ export function Register() {
                 onClick={() => {
                   setRegistered(null);
                   setForm(EMPTY);
+                  setFile(null);
+                  setFileHash(null);
                   setSteps([]);
                 }}
               >
@@ -233,6 +258,30 @@ export function Register() {
             ))}
           </select>
         </label>
+
+        <label className="field">
+          <span>Source document *</span>
+          <input
+            type="file"
+            onChange={(e) => void chooseFile(e.target.files?.[0] ?? null)}
+            aria-invalid={!!errors.document}
+            aria-describedby={errorId("document")}
+          />
+          <span className="help">
+            The file is hashed in your browser and never leaves your device. Only the hash is stored on the chain, as the
+            registration claim of this batch.
+          </span>
+          {errors.document && <span className="field-error" id="error-document">{errors.document}</span>}
+        </label>
+
+        {hashing && <p className="muted">Calculating hash…</p>}
+        {hashError && <p className="field-error">{hashError}</p>}
+        {fileHash && file && (
+          <div className="computed-hash">
+            <p className="muted">Hash of {file.name} (keccak256)</p>
+            <HashValue value={fileHash} full />
+          </div>
+        )}
       </fieldset>
 
       {steps.length > 0 && <Steps steps={steps} />}

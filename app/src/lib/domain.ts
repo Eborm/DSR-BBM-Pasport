@@ -156,14 +156,21 @@ export enum ClaimType {
   StatusChange,
   LocationChange,
   QualityDeclaration,
+  /** Written by MaterialPassport when a batch is registered; nobody can add it by hand. */
+  Registration,
+  /** Written by MaterialPassport when ownership of a batch is transferred; nobody can add it by hand. */
+  OwnershipTransfer,
 }
 
-export const CLAIM_TYPES = [ClaimType.StatusChange, ClaimType.LocationChange, ClaimType.QualityDeclaration] as const;
+/** The claim types a user can add by hand. Registration and OwnershipTransfer are written by the contract itself. */
+export const CLAIM_TYPES: readonly ClaimType[] = [ClaimType.StatusChange, ClaimType.LocationChange, ClaimType.QualityDeclaration];
 
 export const CLAIM_TYPE_LABEL: Record<ClaimType, string> = {
   [ClaimType.StatusChange]: "Statuswijziging",
   [ClaimType.LocationChange]: "Locatiewijziging",
   [ClaimType.QualityDeclaration]: "Kwaliteitsverklaring",
+  [ClaimType.Registration]: "Registration",
+  [ClaimType.OwnershipTransfer]: "Ownership transfer",
 };
 
 /** Mirrors `_mayClaim` in ClaimRegistry.sol: who may add which type of claim. */
@@ -171,6 +178,9 @@ export const CLAIM_TYPE_ALLOWED: Record<ClaimType, readonly ClaimRole[]> = {
   [ClaimType.StatusChange]: [ClaimRole.Owner, ClaimRole.Demolisher],
   [ClaimType.LocationChange]: [ClaimRole.Owner],
   [ClaimType.QualityDeclaration]: [ClaimRole.Inspector],
+  // Only the MaterialPassport contract can write these (see recordClaimFor in ClaimRegistry.sol).
+  [ClaimType.Registration]: [],
+  [ClaimType.OwnershipTransfer]: [],
 };
 
 export interface Claim {

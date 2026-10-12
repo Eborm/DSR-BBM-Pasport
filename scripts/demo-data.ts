@@ -30,27 +30,32 @@ async function main() {
   await (await registry.setRole(owner.address, 3)).wait(); // Owner
   await (await registry.setRole(demolisher.address, 4)).wait(); // Demolisher
 
+  // Link the two contracts: MaterialPassport writes Registration and OwnershipTransfer claims
+  // into ClaimRegistry, so this must happen before the first batch is registered.
+  await (await claimRegistry.setPassport(address)).wait();
+  await (await registry.setClaimRegistry(claimRegistryAddress)).wait();
+
   console.log("Registering sample batches...");
+  const hashOf = (text: string) => ethers.keccak256(ethers.toUtf8Bytes(text));
   const now = Math.floor(Date.now() / 1000);
   await (
     await registry
       .connect(manufacturer)
-      .registerBatch("South Limburg Steelworks", 2 /* B */, "Steel S355, HEA 200", 3 /* BuildingElement */, 5000n, "Heerlen", now - 86400, 0 /* Bim */)
+      .registerBatch("South Limburg Steelworks", 2 /* B */, "Steel S355, HEA 200", 3 /* BuildingElement */, 5000n, "Heerlen", now - 86400, 0 /* Bim */, hashOf("BIM model batch 1"))
   ).wait();
   await (
     await registry
       .connect(manufacturer)
-      .registerBatch("De Maas Concrete Factory", 1 /* A2 */, "Hollow-core slab concrete C45/55", 2 /* Component */, 12000n, "Sittard", now - 172800, 0 /* Bim */)
+      .registerBatch("De Maas Concrete Factory", 1 /* A2 */, "Hollow-core slab concrete C45/55", 2 /* Component */, 12000n, "Sittard", now - 172800, 0 /* Bim */, hashOf("BIM model batch 2"))
   ).wait();
 
   console.log("Adding sample claims...");
   // The inspection report is a real file, so the Verify screen can be tried with it:
   // download http://localhost:5173/demo/inspection-report-batch-1.txt and choose it there.
   const report = await readFile("app/public/demo/inspection-report-batch-1.txt");
-  const hashOf = (text: string) => ethers.keccak256(ethers.toUtf8Bytes(text));
-  await (await registry.connect(inspector).addClaim(1, 2 /* QualityDeclaration */, ethers.keccak256(report))).wait();
-  await (await registry.connect(owner).addClaim(1, 1 /* LocationChange */, hashOf("Transport document to construction site Heerlen"))).wait();
-  await (await registry.connect(inspector).addClaim(2, 2 /* QualityDeclaration */, hashOf("Inspection report hollow-core slab C45/55"))).wait();
+  await (await claimRegistry.connect(inspector).addClaim(1, 2 /* QualityDeclaration */, ethers.keccak256(report))).wait();
+  await (await claimRegistry.connect(owner).addClaim(1, 1 /* LocationChange */, hashOf("Transport document to construction site Heerlen"))).wait();
+  await (await claimRegistry.connect(inspector).addClaim(2, 2 /* QualityDeclaration */, hashOf("Inspection report hollow-core slab C45/55"))).wait();
 
   const accounts = [
     { address: admin.address, name: "Administrator", role: "Admin" },

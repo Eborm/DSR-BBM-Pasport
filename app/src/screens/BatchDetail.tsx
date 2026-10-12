@@ -9,8 +9,9 @@ export function BatchDetail({ id }: { id: bigint }) {
   const { snapshot, role, roleOf } = usePassport();
 
   if (!snapshot) return <p className="muted">Laden...</p>;
-  const batch = snapshot.batches.get(id);
 
+  const batch = snapshot.batches.get(id);
+  
   if (!batch) {
     return (
       <div className="empty">
@@ -21,8 +22,10 @@ export function BatchDetail({ id }: { id: bigint }) {
       </div>
     );
   }
-
+  
   const list = snapshot.claims.get(id) ?? [];
+  const MAX_SHOWN = 3;
+  const shown = list.slice(-MAX_SHOWN);
 
   return (
     <>
@@ -32,13 +35,10 @@ export function BatchDetail({ id }: { id: bigint }) {
           <ActionButton permission={canAddAnyClaim(role)} onClick={() => navigate(href.claim(batch.id))} primary>
             Claim toevoegen
           </ActionButton>
-          <button onClick={() => navigate(href.timeline(batch.id))}>
-            Tijdlijn bekijken
-          </button>
         </div>
       </div>
 
-      <dl className="details">
+      <dl className="attributes">
         <dt>Producent</dt>
         <dd>{batch.producer}</dd>
 
@@ -74,12 +74,16 @@ export function BatchDetail({ id }: { id: bigint }) {
 
       <section>
         <h2>Claims</h2>
-        {list.length === 0 ? (
+        {shown.length === 0 ? (
           <p className="muted">Deze batch heeft nog geen claims.</p>
         ) : (
           <>
+            <a className="button" href={href.timeline(batch.id)}>
+              Tijdlijn bekijken
+            </a>
+          <>
             <ol className="timeline" aria-label="Claims, nieuwste eerst">
-              {[...list].reverse().map((claim) => (
+              {[...shown].reverse().map((claim) => (
                 <li key={claim.index}>
                   <p className="line-header">
                     <strong>{CLAIM_TYPE_LABEL[claim.claimType]}</strong>
@@ -101,7 +105,7 @@ export function BatchDetail({ id }: { id: bigint }) {
             <p>
               <a href={href.verify(batch.id)}>Controleer een document tegen deze claims</a>
             </p>
-          </>
+          </></>
         )}
       </section>
     </>

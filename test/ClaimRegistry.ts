@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { network} from "hardhat";
 
-const { ethers } = await network.connect();
+const { ethers } = await network.create();
 
 const ClaimTypeEnum = { StatusChange: 0, LocationChange: 1, QualityDeclaration: 2 };
 const RoleEnum = { Viewer: 0, Manufacturer: 1, Inspector: 2, Owner: 3, Demolisher: 4 };
@@ -18,6 +18,7 @@ describe("ClaimRegistry", () => {
 
   const BATCH_ID = 1;
   const hash = ethers.keccak256(ethers.toUtf8Bytes("content of a test inspection report"));
+  const sourceHash = ethers.keccak256(ethers.toUtf8Bytes("source document of a test batch"));
 
   // Fresh contract + one wallet per role, before every test.
   beforeEach(async function () {
@@ -31,10 +32,10 @@ describe("ClaimRegistry", () => {
     await registry.setRole(viewer.address, RoleEnum.Viewer);
 
     await registry.connect(manufacturer).registerBatch(
-      "Staalfabriek", 0, "Staal S355", 1, 5000, "Heerlen", 1700000000, 0
+      "Staalfabriek", 0, "Staal S355", 1, 5000, "Heerlen", 1700000000, 0, sourceHash
     );
     await registry.connect(manufacturer).registerBatch(
-      "Staalfabriek", 1, "Staal S355", 2, 1000, "Sittard", 1700005000, 0
+      "Staalfabriek", 1, "Staal S355", 2, 1000, "Sittard", 1700005000, 0, sourceHash
     );
   });
 
@@ -55,12 +56,13 @@ describe("ClaimRegistry", () => {
     it("stores the claim with the right data", async () => {
         await registry.connect(inspector).addClaim(BATCH_ID, ClaimTypeEnum.QualityDeclaration, hash);
 
+        // claims[0] is the Registration claim that registerBatch wrote
         const claims = await registry.getClaims(BATCH_ID);
-        expect(claims.length).to.equal(1);
-        expect(claims[0].batchId).to.equal(BATCH_ID);
-        expect(claims[0].submitter).to.equal(inspector.address);
-        expect(claims[0].documentHash).to.equal(hash);
-        expect(claims[0].claimType).to.equal(ClaimTypeEnum.QualityDeclaration);
+        expect(claims.length).to.equal(2);
+        expect(claims[1].batchId).to.equal(BATCH_ID);
+        expect(claims[1].submitter).to.equal(inspector.address);
+        expect(claims[1].documentHash).to.equal(hash);
+        expect(claims[1].claimType).to.equal(ClaimTypeEnum.QualityDeclaration);
     });
     
     it("takes the timestamp from the block, not from the caller", async () => {
@@ -68,7 +70,7 @@ describe("ClaimRegistry", () => {
 
       const block = await ethers.provider.getBlock("latest");
       const claims = await registry.getClaims(BATCH_ID);
-      expect(claims[0].timestamp).to.equal(block!.timestamp);
+      expect(claims[1].timestamp).to.equal(block!.timestamp);
     });
 
     it("emits a ClaimAdded event", async () => {  
@@ -76,7 +78,7 @@ describe("ClaimRegistry", () => {
         registry.connect(inspector).addClaim(BATCH_ID, ClaimTypeEnum.QualityDeclaration, hash)
       )
         .to.emit(registry, "ClaimAdded")
-        .withArgs(BATCH_ID, 0, inspector.address, hash, ClaimTypeEnum.QualityDeclaration);
+        .withArgs(BATCH_ID, 1, inspector.address, hash, ClaimTypeEnum.QualityDeclaration);
     });
 
     it("refuses a batch that does not exist", async () => {
@@ -141,18 +143,21 @@ describe("ClaimRegistry", () => {
       await registry.connect(inspector).addClaim(BATCH_ID, ClaimTypeEnum.QualityDeclaration, hash);
       await registry.connect(owner).addClaim(BATCH_ID, ClaimTypeEnum.LocationChange, otherHash);
  
+      // claims[0] is the Registration claim that registerBatch wrote
       const claims = await registry.getClaims(BATCH_ID);
-      expect(claims.length).to.equal(2);
-      expect(claims[0].documentHash).to.equal(hash);          // first claim untouched
-      expect(claims[1].documentHash).to.equal(otherHash);
-      expect(await registry.getClaimCount(BATCH_ID)).to.equal(2);
+      expect(claims.length).to.equal(3);
+      expect(claims[0].documentHash).to.equal(sourceHash);    // registration claim untouched
+      expect(claims[1].documentHash).to.equal(hash);          // first added claim untouched
+      expect(claims[2].documentHash).to.equal(otherHash);
+      expect(await registry.getClaimCount(BATCH_ID)).to.equal(3);
     });
  
     it("keeps the claims of different batches separate", async () => { 
       await registry.connect(inspector).addClaim(1, ClaimTypeEnum.QualityDeclaration, hash);
  
-      expect((await registry.getClaims(1)).length).to.equal(1);
-      expect((await registry.getClaims(2)).length).to.equal(0);
+      // every batch starts with its own Registration claim
+      expect((await registry.getClaims(1)).length).to.equal(2);
+      expect((await registry.getClaims(2)).length).to.equal(1);
     });
   });
 })

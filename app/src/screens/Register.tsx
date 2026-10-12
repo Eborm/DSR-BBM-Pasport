@@ -24,7 +24,7 @@ const EMPTY = {
 
 /** Screen C: register a batch. */
 export function Register() {
-  const { role, writer, reload, snapshot, contract, claims } = usePassport();
+  const { role, writer, reload, snapshot, contract } = usePassport();
   const permission = canRegister(role);
   const [form, setForm] = useState(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
@@ -107,7 +107,7 @@ export function Register() {
       setRegistered(event ? (event.args.batchId as bigint) : await contract.batchCount());
     } catch (error) {
       update(0, { state: "failed" });
-      setFailure(explainError(error, claims?.interface));
+      setFailure(explainError(error, contract.interface));
     } finally {
       setPending(false);
     }

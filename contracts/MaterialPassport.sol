@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.34;
 
-import "./ClaimRegistry.sol";
-
 contract MaterialPassport {
     // Enums
     enum Role { 
@@ -36,10 +34,13 @@ contract MaterialPassport {
         DemolitionInventory
     }
 
+    // Registration and OwnershipTransfer are system claims: they are never written by hand only by the contract.
     enum ClaimType { 
         StatusChange, 
         LocationChange, 
-        QualityDeclaration
+        QualityDeclaration,
+        Registration,
+        OwnershipTransfer
     }
 
     // Structs
@@ -80,6 +81,12 @@ contract MaterialPassport {
         ClaimType claimType
     );
 
+    event OwnershipTransferred(
+        uint256 indexed batchId, 
+        address indexed from, 
+        address indexed to
+    );
+
     error NotAdmin();
     error WrongRole();
     error NotAllowed(address account, ClaimType claimType);
@@ -90,6 +97,7 @@ contract MaterialPassport {
     error InvalidProductionDate();
     error BatchNotFound(uint256 batchId);
     error EmptyHash();
+    error InvalidOwner(string reason);
 
     // Storage
     address public admin;
@@ -121,6 +129,10 @@ contract MaterialPassport {
         else if (claimType == ClaimType.LocationChange) {
             if (role != Role.Owner) revert NotAllowed(msg.sender, claimType);
         } 
+        else if (claimType == ClaimType.Registration || claimType == ClaimType.OwnershipTransfer) {
+            // System claims can never be added by hand, only via registerBatch and transferOwnership.
+            revert NotAllowed(msg.sender, claimType);
+        } 
         else {
             if (role != Role.Owner && role != Role.Demolisher) revert NotAllowed(msg.sender, claimType);
         }
@@ -130,14 +142,6 @@ contract MaterialPassport {
     function setRole(address _account, Role _role) public onlyAdmin {
         roles[_account] = _role;
     }
-
-    ClaimRegistry public claimRegistry;
-
-    function setClaimRegistry(address _registry) public onlyAdmin {
-        claimRegistry = ClaimRegistry(_registry);
-    }
-
-    event OwnershipTransferred(uint256 indexed batchId, address indexed from, address indexed to);
 
     // Register batches
     function registerBatch(
@@ -177,7 +181,7 @@ contract MaterialPassport {
         });
 
         // Registration claim: ties the batch to the hash of its source document.
-        claimRegistry.recordClaimFor(_id, _currentOwner, ClaimRegistry.ClaimType.Registration, _documentHash);
+        pushClaim(_id, _currentOwner, ClaimType.Registration, _documentHash);
 
         emit BatchRegistered(_id, _currentOwner, _registeredAt);
         return _id;
@@ -187,16 +191,15 @@ contract MaterialPassport {
     /// The transfer is also written as a claim, with the hash of the transfer document.
     function transferOwnership(uint256 _batchId, address _newOwner, bytes32 _documentHash) public {
         Batch storage batch = batches[_batchId];
-        require(batch.id != 0, "Batch does not exist");
-        require(msg.sender == batch.currentOwner, "Only the current owner can transfer");
-        require(_newOwner != address(0), "New owner cannot be the zero address");
-        require(_newOwner != msg.sender, "New owner is already the owner");
-        Role newRole = roles[_newOwner];
-        require(newRole == Role.Owner || newRole == Role.Demolisher, "New owner must be an Owner or Demolisher");
+        if (batch.id == 0) revert BatchNotFound(_batchId);
+        if (msg.sender != batch.currentOwner) revert NotAllowed(msg.sender, ClaimType.OwnershipTransfer);
+        if (_newOwner == address(0)) revert InvalidOwner("New owner cannot be zero address");
+        if (_newOwner == msg.sender) revert InvalidOwner("New owner cannot be the current owner");
+        if (!(roles[_newOwner] == Role.Owner || roles[_newOwner] == Role.Demolisher)) revert NotAllowed(msg.sender, ClaimType.OwnershipTransfer);
 
         batch.currentOwner = _newOwner;
 
-        claimRegistry.recordClaimFor(_batchId, msg.sender, ClaimRegistry.ClaimType.OwnershipTransfer, _documentHash);
+        pushClaim(_batchId, msg.sender, ClaimType.OwnershipTransfer, _documentHash);
 
         emit OwnershipTransferred(_batchId, msg.sender, _newOwner);
     }
@@ -208,20 +211,32 @@ contract MaterialPassport {
         bytes32 documentHash
     ) external mayClaim(claimType) returns (uint256 claimIndex) {
         if (batches[batchId].id == 0) revert BatchNotFound(batchId);
+
+        claimIndex = pushClaim(batchId, msg.sender, claimType, documentHash);
+    }
+
+    /// Used by addClaim, and by registerBatch and transferOwnership for the system claims.
+    /// The submitter is passed in so the claim is always attributed to the right account.
+    function pushClaim(
+        uint256 batchId,
+        address submitter,
+        ClaimType claimType,
+        bytes32 documentHash
+    ) private returns (uint256 claimIndex) {
         if (documentHash == bytes32(0)) revert EmptyHash();
 
         claimIndex = claimsByBatch[batchId].length;
         claimsByBatch[batchId].push(
             Claim({
                 batchId: batchId,
-                submitter: msg.sender,
+                submitter: submitter,
                 documentHash: documentHash,
                 timestamp: uint64(block.timestamp),
                 claimType: claimType
             })
         );
 
-        emit ClaimAdded(batchId, claimIndex, msg.sender, documentHash, claimType);
+        emit ClaimAdded(batchId, claimIndex, submitter, documentHash, claimType);
     }
 
     function getClaims(uint256 batchId) external view returns (Claim[] memory) {

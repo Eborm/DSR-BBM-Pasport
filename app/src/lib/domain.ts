@@ -151,12 +151,12 @@ export const CLAIM_TYPE_LABEL: Record<ClaimType, string> = {
   [ClaimType.OwnershipTransfer]: "Ownership transfer",
 };
 
-/** Mirrors `_mayClaim` in ClaimRegistry.sol: who may add which type of claim. */
-export const CLAIM_TYPE_ALLOWED: Record<ClaimType, readonly ClaimRole[]> = {
-  [ClaimType.StatusChange]: [ClaimRole.Owner, ClaimRole.Demolisher],
-  [ClaimType.LocationChange]: [ClaimRole.Owner],
-  [ClaimType.QualityDeclaration]: [ClaimRole.Inspector],
-  // Only the MaterialPassport contract can write these (see recordClaimFor in ClaimRegistry.sol).
+/** Mirrors the `mayClaim` modifier in MaterialPassport.sol: who may add which type of claim. */
+export const CLAIM_TYPE_ALLOWED: Record<ClaimType, readonly Role[]> = {
+  [ClaimType.StatusChange]: [Role.Owner, Role.Demolisher],
+  [ClaimType.LocationChange]: [Role.Owner],
+  [ClaimType.QualityDeclaration]: [Role.Inspector],
+  // Only MaterialPassport itself can write these (see registerBatch and transferOwnership).
   [ClaimType.Registration]: [],
   [ClaimType.OwnershipTransfer]: [],
 };

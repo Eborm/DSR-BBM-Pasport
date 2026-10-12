@@ -1,9 +1,8 @@
 /**
- * Deploys MaterialPassport (Sven's contract) and ClaimRegistry (Bram's contract), assigns roles
- * to five test accounts (admin + one account per role) in both, registers a
- * couple of sample batches and adds a few sample claims. Writes address + ABI
- * of both contracts to app/public/deployment.json, so the web app knows which
- * contracts to talk to.
+ * Deploys MaterialPassport, assigns roles to five test accounts (admin + one
+ * account per role), registers a couple of sample batches and adds a few
+ * sample claims. Writes address + ABI of the contract to
+ * app/public/deployment.json, so the web app knows which contract to talk to.
  *
  *   hardhat run scripts/demo-data.ts --network localhost
  *
@@ -26,28 +25,10 @@ async function main() {
   console.log(`MaterialPassport is at ${address}`);
 
   console.log("Assigning roles...");
-  await (await registry.assignRole(manufacturer.address, 1)).wait(); // Manufacturer
-  await (await registry.assignRole(inspector.address, 2)).wait(); // Inspector
-  await (await registry.assignRole(owner.address, 3)).wait(); // Owner
-  await (await registry.assignRole(demolisher.address, 4)).wait(); // Demolisher
-
-  // ClaimRegistry keeps its own roles, with its own enum order:
-  // Manufacturer 0, Owner 1, Inspector 2, Demolisher 3, Viewer 4 (not the same as MaterialPassport!).
-  console.log("Deploying ClaimRegistry...");
-  const claimRegistry = await ethers.deployContract("ClaimRegistry");
-  await claimRegistry.waitForDeployment();
-  const claimRegistryAddress = await claimRegistry.getAddress();
-  console.log(`ClaimRegistry is at ${claimRegistryAddress}`);
-
-  await (await claimRegistry.setRole(manufacturer.address, 0)).wait(); // Manufacturer
-  await (await claimRegistry.setRole(owner.address, 1)).wait(); // Owner
-  await (await claimRegistry.setRole(inspector.address, 2)).wait(); // Inspector
-  await (await claimRegistry.setRole(demolisher.address, 3)).wait(); // Demolisher
-
-  // Link the two contracts: MaterialPassport writes Registration and OwnershipTransfer claims
-  // into ClaimRegistry, so this must happen before the first batch is registered.
-  await (await claimRegistry.setPassport(address)).wait();
-  await (await registry.setClaimRegistry(claimRegistryAddress)).wait();
+  await (await registry.setRole(manufacturer.address, 1)).wait(); // Manufacturer
+  await (await registry.setRole(inspector.address, 2)).wait(); // Inspector
+  await (await registry.setRole(owner.address, 3)).wait(); // Owner
+  await (await registry.setRole(demolisher.address, 4)).wait(); // Demolisher
 
   console.log("Registering sample batches...");
   const hashOf = (text: string) => ethers.keccak256(ethers.toUtf8Bytes(text));
@@ -67,9 +48,9 @@ async function main() {
   // The inspection report is a real file, so the Verify screen can be tried with it:
   // download http://localhost:5173/demo/inspection-report-batch-1.txt and choose it there.
   const report = await readFile("app/public/demo/inspection-report-batch-1.txt");
-  await (await claimRegistry.connect(inspector).addClaim(1, 2 /* QualityDeclaration */, ethers.keccak256(report))).wait();
-  await (await claimRegistry.connect(owner).addClaim(1, 1 /* LocationChange */, hashOf("Transport document to construction site Heerlen"))).wait();
-  await (await claimRegistry.connect(inspector).addClaim(2, 2 /* QualityDeclaration */, hashOf("Inspection report hollow-core slab C45/55"))).wait();
+  await (await registry.connect(inspector).addClaim(1, 2 /* QualityDeclaration */, ethers.keccak256(report))).wait();
+  await (await registry.connect(owner).addClaim(1, 1 /* LocationChange */, hashOf("Transport document to construction site Heerlen"))).wait();
+  await (await registry.connect(inspector).addClaim(2, 2 /* QualityDeclaration */, hashOf("Inspection report hollow-core slab C45/55"))).wait();
 
   const accounts = [
     { address: admin.address, name: "Administrator", role: "Admin" },
@@ -83,14 +64,9 @@ async function main() {
     with: { type: "json" },
   });
 
-  const claimArtifact = await import("../artifacts/contracts/ClaimRegistry.sol/ClaimRegistry.json", {
-    with: { type: "json" },
-  });
-
   const deployment = {
     address,
     abi: artifact.default.abi,
-    claimRegistry: { address: claimRegistryAddress, abi: claimArtifact.default.abi },
     accounts,
   };
 

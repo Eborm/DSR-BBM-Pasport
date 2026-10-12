@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Address, ClaimRoleBadge, HashValue } from "../components/ui";
+import { Address, HashValue, RoleBadge } from "../components/ui";
 import { CLAIM_TYPE_LABEL, type Claim } from "../lib/domain";
 import { formatDateTime } from "../lib/format";
 import { hashFile } from "../lib/hash";
@@ -8,12 +8,12 @@ import { usePassport } from "../state";
 
 /**
  * Screen E: check a document against the claims on the chain. The file is
- * hashed in the browser and compared with the hashes in ClaimRegistry; a
+ * hashed in the browser and compared with the hashes of the claims in MaterialPassport; a
  * single changed byte gives a different hash, so no match means the document
  * is not the one that was registered.
  */
 export function Verify({ id }: { id?: bigint }) {
-  const { snapshot, claims, claimRoleOf } = usePassport();
+  const { snapshot, roleOf } = usePassport();
   const [file, setFile] = useState<File | null>(null);
   const [hash, setHash] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
@@ -42,17 +42,6 @@ export function Verify({ id }: { id?: bigint }) {
     } finally {
       setBusy(false);
     }
-  }
-
-  if (!claims) {
-    return (
-      <div className="empty">
-        <h1>Document controleren</h1>
-        <p>
-          ClaimRegistry is niet gedeployed. Stop de demo en start hem opnieuw met <code>npm run demo</code>.
-        </p>
-      </div>
-    );
   }
 
   return (
@@ -122,7 +111,7 @@ export function Verify({ id }: { id?: bigint }) {
                     <strong>{CLAIM_TYPE_LABEL[claim.claimType]}</strong> op{" "}
                     <a href={href.batch(claim.batchId)}>batch #{claim.batchId.toString()}</a> (claim #{claim.index}),{" "}
                     {formatDateTime(claim.timestamp)}, door <Address value={claim.submitter} />{" "}
-                    <ClaimRoleBadge role={claimRoleOf(claim.submitter)} />
+                    <RoleBadge role={roleOf(claim.submitter)} />
                   </li>
                 ))}
               </ul>

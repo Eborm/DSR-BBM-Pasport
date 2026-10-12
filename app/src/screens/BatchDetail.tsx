@@ -1,4 +1,4 @@
-import { ActionButton, Address, ClaimRoleBadge, HashValue } from "../components/ui";
+import { ActionButton, Address, HashValue, RoleBadge } from "../components/ui";
 import { CLAIM_TYPE_LABEL, CLASSIFICATION_LABEL, LEVEL_LABEL, SOURCE_FILE_LABEL, canAddAnyClaim } from "../lib/domain";
 import { formatDateTime } from "../lib/format";
 import { href, navigate } from "../lib/router";
@@ -6,7 +6,7 @@ import { usePassport } from "../state";
 
 /** Screen B: details of a single batch. */
 export function BatchDetail({ id }: { id: bigint }) {
-  const { snapshot, claims, claimRole, claimRoleOf } = usePassport();
+  const { snapshot, role, roleOf } = usePassport();
 
   if (!snapshot) return <p className="muted">Laden...</p>;
   const batch = snapshot.batches.get(id);
@@ -28,11 +28,9 @@ export function BatchDetail({ id }: { id: bigint }) {
     <>
       <div className="heading-row">
         <h1>Batch #{batch.id.toString()}</h1>
-        {claims && (
-          <ActionButton permission={canAddAnyClaim(claimRole)} onClick={() => navigate(href.claim(batch.id))} primary>
-            Claim toevoegen
-          </ActionButton>
-        )}
+        <ActionButton permission={canAddAnyClaim(role)} onClick={() => navigate(href.claim(batch.id))} primary>
+          Claim toevoegen
+        </ActionButton>
       </div>
 
       <dl className="details">
@@ -71,9 +69,7 @@ export function BatchDetail({ id }: { id: bigint }) {
 
       <section>
         <h2>Claims</h2>
-        {!claims ? (
-          <p className="muted">ClaimRegistry is niet gedeployed. Start de demo opnieuw met npm run demo.</p>
-        ) : list.length === 0 ? (
+        {list.length === 0 ? (
           <p className="muted">Deze batch heeft nog geen claims.</p>
         ) : (
           <>
@@ -89,7 +85,7 @@ export function BatchDetail({ id }: { id: bigint }) {
                   </p>
                   <p className="line-actor">
                     <span className="muted">door</span> <Address value={claim.submitter} />{" "}
-                    <ClaimRoleBadge role={claimRoleOf(claim.submitter)} />
+                    <RoleBadge role={roleOf(claim.submitter)} />
                   </p>
                   <div className="document">
                     <span className="muted">Documenthash</span> <HashValue value={claim.documentHash} />

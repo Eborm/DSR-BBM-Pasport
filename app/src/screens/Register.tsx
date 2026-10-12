@@ -24,7 +24,7 @@ const EMPTY = {
 
 /** Screen C: register a batch. */
 export function Register() {
-  const { role, writer, reload, snapshot, contract, claims } = usePassport();
+  const { role, writer, reload, snapshot, contract } = usePassport();
   const permission = canRegister(role);
   const [form, setForm] = useState(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
@@ -49,7 +49,7 @@ export function Register() {
     try {
       setFileHash(await hashFile(next));
     } catch {
-      setHashError("This file could not be read. Choose it again.");
+      setHashError("Dit bestand kon niet worden gelezen. Kies het opnieuw.");
     } finally {
       setHashing(false);
     }
@@ -62,7 +62,7 @@ export function Register() {
     if (!/^\d+$/.test(form.mass) || BigInt(form.mass) === 0n) found.mass = "Voer een gehele massa groter dan nul in.";
     if (!form.origin.trim()) found.origin = "Voer een herkomst in.";
     if (!form.productionDate) found.productionDate = "Kies een productiedatum.";
-    if (!fileHash) found.document = hashing ? "Wait until the file has been hashed." : "Choose the source document.";
+    if (!fileHash) found.document = hashing ? "Wacht tot het bestand is gehashed." : "Kies het bronbestand.";
     setErrors(found);
     return Object.keys(found).length === 0;
   }
@@ -107,7 +107,7 @@ export function Register() {
       setRegistered(event ? (event.args.batchId as bigint) : await contract.batchCount());
     } catch (error) {
       update(0, { state: "failed" });
-      setFailure(explainError(error, claims?.interface));
+      setFailure(explainError(error, contract.interface));
     } finally {
       setPending(false);
     }
@@ -268,8 +268,7 @@ export function Register() {
             aria-describedby={errorId("document")}
           />
           <span className="help">
-            The file is hashed in your browser and never leaves your device. Only the hash is stored on the chain, as the
-            registration claim of this batch.
+            Het bestand is gehashed in je browser en verlaat je apparaat nooit. Alleen de hash wordt op de keten opgeslagen, als de registratieclaim van deze batch.
           </span>
           {errors.document && <span className="field-error" id="error-document">{errors.document}</span>}
         </label>

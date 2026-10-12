@@ -12,9 +12,8 @@ const PAGE = 15;
 
 const CALL_LABEL: Record<string, string> = {
   registerBatch: "batch registreren",
-  assignRole: "rol toewijzen",
+  setRole: "rol toewijzen",
   addClaim: "claim toevoegen",
-  setRole: "rol toewijzen (claims)",
 };
 
 /**
@@ -23,7 +22,7 @@ const CALL_LABEL: Record<string, string> = {
  * block refers to the previous one by its hash.
  */
 export function Chain({ focus }: { focus?: number }) {
-  const { provider, contract, claims, deployment, blockNumber, developer, setDeveloper } = usePassport();
+  const { provider, contract, deployment, blockNumber, developer, setDeveloper } = usePassport();
   const [count, setCount] = useState(PAGE);
   const [blocks, setBlocks] = useState<ChainBlock[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +33,6 @@ export function Chain({ focus }: { focus?: number }) {
     if (blockNumber === null || !developer) return;
     let cancelled = false;
     const contracts = [{ interface: contract.interface, address: deployment.address }];
-    if (claims && deployment.claimRegistry) contracts.push({ interface: claims.interface, address: deployment.claimRegistry.address });
     loadBlocks(provider, contracts, blockNumber, Math.max(0, blockNumber - needed + 1)).then(
       (loaded) => {
         if (cancelled) return;
@@ -46,7 +44,7 @@ export function Chain({ focus }: { focus?: number }) {
     return () => {
       cancelled = true;
     };
-  }, [provider, contract, claims, deployment, blockNumber, needed, developer]);
+  }, [provider, contract, deployment, blockNumber, needed, developer]);
 
   const loaded = blocks !== null;
   useEffect(() => {
@@ -74,12 +72,6 @@ export function Chain({ focus }: { focus?: number }) {
         <h1>Chain</h1>
         <p className="muted">
           MaterialPassport <Address value={deployment.address} />
-          {deployment.claimRegistry && (
-            <>
-              {" "}
-              · ClaimRegistry <Address value={deployment.claimRegistry.address} />
-            </>
-          )}
         </p>
       </div>
       <p>
@@ -168,12 +160,8 @@ function BlockCard({ block, focused, linked }: { block: ChainBlock; focused: boo
 
 function TxView({ tx }: { tx: ChainTx }) {
   const { deployment } = usePassport();
-  const known = [deployment.address, deployment.claimRegistry?.address].filter((a): a is string => !!a);
-  const toContract = tx.to !== null && known.some((a) => a.toLowerCase() === tx.to!.toLowerCase());
-  const deployedName =
-    tx.deployed && tx.deployed.toLowerCase() === deployment.claimRegistry?.address.toLowerCase()
-      ? "ClaimRegistry"
-      : "MaterialPassport";
+  const toContract = tx.to !== null && tx.to.toLowerCase() === deployment.address.toLowerCase();
+  const deployedName = "MaterialPassport";
   const title = tx.call
     ? `${tx.call.name}${CALL_LABEL[tx.call.name] ? ` · ${CALL_LABEL[tx.call.name]}` : ""}`
     : tx.deployed

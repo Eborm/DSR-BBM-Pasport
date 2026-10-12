@@ -1,16 +1,16 @@
 /**
- * Domain concepts, matching contracts/MaterialPassport.sol (Sven's version).
+ * Domain concepts, matching contracts/MaterialPassport.sol.
  * Note: the order of each enum must stay exactly the same as the contract,
  * because Solidity passes an enum as a number (0, 1, 2, ...), not by name.
  *
  * This file replaced the original domain.ts from the team project. Functionality
- * that existed in the original contract but is not (yet) in Sven's contract
- * (transfer, splitting, multiple roles per address) is deliberately NOT
- * reimplemented here -- the screens that used it (TransferSplit, Scan) show a
- * clear "not yet available" message instead. Claims live in a separate contract
- * (ClaimRegistry.sol); their types are at the bottom of this file. The Chain
- * (developer view) screen is kept, since it only reads raw blocks/transactions
- * and doesn't depend on contract-specific functionality.
+ * that is not (yet) in the contract (transfer, splitting, multiple roles per
+ * address) is deliberately NOT reimplemented here -- the screens that used it
+ * (TransferSplit, Scan) show a clear "not yet available" message instead.
+ * Claims live in the same contract as the batches and share its roles; their
+ * types are at the bottom of this file. The Chain (developer view) screen is
+ * kept, since it only reads raw blocks/transactions and doesn't depend on
+ * contract-specific functionality.
  */
 
 // ------------------------------------------------------------------ Roles
@@ -117,7 +117,7 @@ export function canRegister(role: Role | null): Permission {
   }
   return ALLOWED;
 }
-
+ 
 /**
  * Functionality that is not yet in the contract. The screens that use this
  * (TransferSplit, Scan) show a clear message instead of a crash or a
@@ -128,29 +128,7 @@ export const NOT_IMPLEMENTED: Permission = {
   reason: "Deze functionaliteit zit nog niet in het contract. Dit volgt in een latere versie.",
 };
 
-// -------------------------------------------------------- Claims (ClaimRegistry.sol)
-
-/**
- * Roles as ClaimRegistry.sol knows them. Careful: this is a different order
- * than `Role` above. MaterialPassport starts with Viewer = 0, ClaimRegistry
- * starts with Manufacturer = 0, and each contract keeps its own roles. Never
- * pass a `Role` to ClaimRegistry or the other way around.
- */
-export enum ClaimRole {
-  Manufacturer,
-  Owner,
-  Inspector,
-  Demolisher,
-  Viewer,
-}
-
-export const CLAIM_ROLE_LABEL: Record<ClaimRole, string> = {
-  [ClaimRole.Manufacturer]: "Manufacturer",
-  [ClaimRole.Owner]: "Owner",
-  [ClaimRole.Inspector]: "Inspector",
-  [ClaimRole.Demolisher]: "Demolisher",
-  [ClaimRole.Viewer]: "Viewer",
-};
+// ------------------------------------------------------------ Claims
 
 export enum ClaimType {
   StatusChange,
@@ -169,16 +147,16 @@ export const CLAIM_TYPE_LABEL: Record<ClaimType, string> = {
   [ClaimType.StatusChange]: "Statuswijziging",
   [ClaimType.LocationChange]: "Locatiewijziging",
   [ClaimType.QualityDeclaration]: "Kwaliteitsverklaring",
-  [ClaimType.Registration]: "Registration",
-  [ClaimType.OwnershipTransfer]: "Ownership transfer",
+  [ClaimType.Registration]: "Registratie",
+  [ClaimType.OwnershipTransfer]: "Eigendom overdracht",
 };
 
-/** Mirrors `_mayClaim` in ClaimRegistry.sol: who may add which type of claim. */
-export const CLAIM_TYPE_ALLOWED: Record<ClaimType, readonly ClaimRole[]> = {
-  [ClaimType.StatusChange]: [ClaimRole.Owner, ClaimRole.Demolisher],
-  [ClaimType.LocationChange]: [ClaimRole.Owner],
-  [ClaimType.QualityDeclaration]: [ClaimRole.Inspector],
-  // Only the MaterialPassport contract can write these (see recordClaimFor in ClaimRegistry.sol).
+/** Mirrors the `mayClaim` modifier in MaterialPassport.sol: who may add which type of claim. */
+export const CLAIM_TYPE_ALLOWED: Record<ClaimType, readonly Role[]> = {
+  [ClaimType.StatusChange]: [Role.Owner, Role.Demolisher],
+  [ClaimType.LocationChange]: [Role.Owner],
+  [ClaimType.QualityDeclaration]: [Role.Inspector],
+  // Only MaterialPassport itself can write these (see registerBatch and transferOwnership).
   [ClaimType.Registration]: [],
   [ClaimType.OwnershipTransfer]: [],
 };
@@ -195,10 +173,10 @@ export interface Claim {
   index: number;
 }
 
-const allowedLabels = (type: ClaimType) => CLAIM_TYPE_ALLOWED[type].map((r) => CLAIM_ROLE_LABEL[r]).join(" or ");
+const allowedLabels = (type: ClaimType) => CLAIM_TYPE_ALLOWED[type].map((r) => ROLE_LABEL[r]).join(" or ");
 
 /** `role` is `null` if no account is chosen. */
-export function canAddClaim(role: ClaimRole | null, type: ClaimType): Permission {
+export function canAddClaim(role: Role | null, type: ClaimType): Permission {
   if (role === null) return NO_ACCOUNT;
   if (!CLAIM_TYPE_ALLOWED[type].includes(role)) {
     return {
@@ -210,7 +188,7 @@ export function canAddClaim(role: ClaimRole | null, type: ClaimType): Permission
 }
 
 /** Is there any claim type this role may add at all? Used for the button on the batch screen. */
-export function canAddAnyClaim(role: ClaimRole | null): Permission {
+export function canAddAnyClaim(role: Role | null): Permission {
   if (role === null) return NO_ACCOUNT;
   if (!CLAIM_TYPES.some((type) => CLAIM_TYPE_ALLOWED[type].includes(role))) {
     return {
@@ -221,7 +199,7 @@ export function canAddAnyClaim(role: ClaimRole | null): Permission {
   return ALLOWED;
 }
 
-export const claimTypesFor = (role: ClaimRole | null) =>
+export const claimTypesFor = (role: Role | null) =>
   role === null ? [] : CLAIM_TYPES.filter((type) => CLAIM_TYPE_ALLOWED[type].includes(role));
 
 export const allowedRolesLabel = allowedLabels;

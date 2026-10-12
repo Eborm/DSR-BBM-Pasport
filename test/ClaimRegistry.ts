@@ -6,6 +6,9 @@ const { ethers } = await network.create();
 const ClaimTypeEnum = { StatusChange: 0, LocationChange: 1, QualityDeclaration: 2 };
 const RoleEnum = { Viewer: 0, Manufacturer: 1, Inspector: 2, Owner: 3, Demolisher: 4 };
 
+// This test suite tests Reuirement 5 (integrity and reliability): information about who submitted a claim and 
+// when is stored in the blockchain, so it cannot be changed without changing the blockchain itself.
+// This test suite also tests requirement 6 (access control): only certain roles are allowed to add certain types of claims.
 describe("ClaimRegistry", () => {
   let registry: any;
   let admin: any;

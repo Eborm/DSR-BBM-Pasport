@@ -117,7 +117,7 @@ export function canRegister(role: Role | null): Permission {
   }
   return ALLOWED;
 }
-
+ 
 /**
  * Functionality that is not yet in the contract. The screens that use this
  * (TransferSplit, Scan) show a clear message instead of a crash or a
@@ -147,8 +147,8 @@ export const CLAIM_TYPE_LABEL: Record<ClaimType, string> = {
   [ClaimType.StatusChange]: "Statuswijziging",
   [ClaimType.LocationChange]: "Locatiewijziging",
   [ClaimType.QualityDeclaration]: "Kwaliteitsverklaring",
-  [ClaimType.Registration]: "Registration",
-  [ClaimType.OwnershipTransfer]: "Ownership transfer",
+  [ClaimType.Registration]: "Registratie",
+  [ClaimType.OwnershipTransfer]: "Eigendom overdracht",
 };
 
 /** Mirrors the `mayClaim` modifier in MaterialPassport.sol: who may add which type of claim. */

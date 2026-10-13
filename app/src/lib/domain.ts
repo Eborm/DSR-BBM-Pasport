@@ -167,6 +167,15 @@ export const CLAIM_TYPE_ALLOWED: Record<ClaimType, readonly Role[]> = {
   [ClaimType.OwnershipTransfer]: [],
 };
 
+/** What document the hash of a claim is from. */
+export const CLAIM_DOCUMENT_LABEL: Partial<Record<ClaimType, string>> = {
+  [ClaimType.StatusChange]: "Hash van het statusdocument",
+  [ClaimType.LocationChange]: "Hash van het locatiedocument",
+  [ClaimType.QualityDeclaration]: "Hash van de kwaliteitsverklaring",
+  [ClaimType.Registration]: "Hash van het brondocument",
+  [ClaimType.OwnershipTransfer]: "Hash van het overdrachtsdocument",
+};
+
 export interface Claim {
   batchId: bigint;
   submitter: string;

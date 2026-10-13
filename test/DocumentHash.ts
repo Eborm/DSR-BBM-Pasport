@@ -6,6 +6,9 @@ import { keccak256 } from "ethers";
  * trustworthy if changing the document always changes the hash. These tests check
  * that for single-byte changes.
  */
+
+// This test suite tests Requirement 5 (integrity): the hash of a document is stored in the blockchain, 
+// so it cannot be changed without changing the document itself.
 describe("document hash", () => {
     // A small document with every possible byte value in it, so no value is special-cased.
     const sample = Uint8Array.from({ length: 256 }, (_, i) => i);

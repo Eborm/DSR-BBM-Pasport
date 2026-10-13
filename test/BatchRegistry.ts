@@ -12,6 +12,8 @@ const ClaimTypeEnum = { StatusChange: 0, LocationChange: 1, QualityDeclaration: 
 const DOC_HASH = ethers.keccak256(ethers.toUtf8Bytes("test source document"));
 const TRANSFER_HASH = ethers.keccak256(ethers.toUtf8Bytes("test transfer document"));
 
+// This test suite tests Requirement 1 (unique identification): every batch has a unique id.
+// This test suite also tests requirement 2 (standardized data): the data is stored in a standardized format.
 describe("BatchRegistry", function () {
   // Deploy the MaterialPassport contract before each test
   let registry: any;

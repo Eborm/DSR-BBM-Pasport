@@ -1,4 +1,4 @@
-import { Contract, JsonRpcProvider } from "ethers";
+import { Contract, EventLog, JsonRpcProvider } from "ethers";
 import { Role, type Batch, type Claim } from "./domain";
 
 export interface DemoAccount {
@@ -97,4 +97,24 @@ export async function loadSnapshot(contract: Contract, deployment: Deployment): 
 export async function roleOf(contract: Contract, address: string): Promise<Role> {
   const r: bigint = await contract.roles(address);
   return Number(r) as Role;
+}
+
+export async function loadTransferRecipients(contract: Contract, batchId: bigint): Promise<Map<number, string>> {
+  const transferLogs = await contract.queryFilter(contract.filters.OwnershipTransferred(batchId));
+  const claimLogs = await contract.queryFilter(contract.filters.ClaimAdded(batchId));
+  
+  const recipientByTransaction = new Map<string, string>();
+  for (const log of transferLogs) {
+    recipientByTransaction.set(log.transactionHash, (log as EventLog).args.to);
+  }
+
+  const recipients = new Map<number, string>();
+  for (const log of claimLogs) {
+    const to = recipientByTransaction.get(log.transactionHash);
+    if (to !== undefined) {
+      recipients.set(Number((log as EventLog).args.claimIndex), to);
+    }
+  }
+
+  return recipients;
 }

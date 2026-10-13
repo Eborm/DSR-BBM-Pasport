@@ -14,6 +14,7 @@ const CALL_LABEL: Record<string, string> = {
   registerBatch: "batch registreren",
   setRole: "rol toewijzen",
   addClaim: "claim toevoegen",
+  transferOwnership: "transfer ownership",
 };
 
 /**

@@ -6,7 +6,7 @@ import { usePassport } from "../state";
 
 /** Screen B: details of a single batch. */
 export function BatchDetail({ id }: { id: bigint }) {
-  const { snapshot, role, roleOf } = usePassport();
+  const { snapshot, role, roleOf, account } = usePassport();
 
   if (!snapshot) return <p className="muted">Laden...</p>;
   const batch = snapshot.batches.get(id);
@@ -23,12 +23,13 @@ export function BatchDetail({ id }: { id: bigint }) {
   }
 
   const list = snapshot.claims.get(id) ?? [];
+  const ownsBatch = !!account && account.address.toLowerCase() === batch.currentOwner.toLowerCase();
 
   return (
     <>
       <div className="heading-row">
         <h1>Batch #{batch.id.toString()}</h1>
-        <ActionButton permission={canAddAnyClaim(role)} onClick={() => navigate(href.claim(batch.id))} primary>
+        <ActionButton permission={canAddAnyClaim(role, ownsBatch)} onClick={() => navigate(href.claim(batch.id))} primary>
           Claim toevoegen
         </ActionButton>
       </div>

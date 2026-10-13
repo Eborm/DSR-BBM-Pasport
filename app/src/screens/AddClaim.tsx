@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { ErrorBox, HashValue, Steps, SubmitButton, type Step } from "../components/ui";
+import { Address, ErrorBox, HashValue, Steps, SubmitButton, type Step } from "../components/ui";
 import {
   CLAIM_TYPE_LABEL,
   CLAIM_TYPES,
   ClaimType,
+  FORM_CLAIM_TYPES,
+  ROLE_LABEL,
+  TRANSFER_RECIPIENT_ROLES,
   allowedRolesLabel,
   canAddClaim,
+  canTransferBatch,
   claimTypesFor,
 } from "../lib/domain";
 import { explainError, type Explained } from "../lib/errors";
@@ -15,7 +19,7 @@ import { usePassport } from "../state";
 
 /** Screen D: add a claim to a batch. The document itself stays in the browser; only its hash goes on the chain. */
 export function AddClaim({ id }: { id: bigint }) {
-  const { snapshot, contract, role, writer, reload } = usePassport();
+  const { snapshot, contract, role, writer, reload, account, deployment, roleOf } = usePassport();
   const [type, setType] = useState<ClaimType>(ClaimType.StatusChange);
   const [file, setFile] = useState<File | null>(null);
   const [fileHash, setFileHash] = useState<string | null>(null);
@@ -25,15 +29,36 @@ export function AddClaim({ id }: { id: bigint }) {
   const [steps, setSteps] = useState<Step[]>([]);
   const [pending, setPending] = useState(false);
   const [failure, setFailure] = useState<Explained | null>(null);
-  const [added, setAdded] = useState<{ index: number; hash: string; tx: string } | null>(null);
+  const [added, setAdded] = useState<{ index: number; hash: string; tx: string; newOwner?: string } | null>(null);
+  const [newOwner, setNewOwner] = useState("");
 
-  // Start on a claim type the chosen account may actually add.
+  const batch = snapshot?.batches.get(id);
+  const isTransfer = type === ClaimType.OwnershipTransfer;
+  const ownsBatch = !!account && !!batch && account.address.toLowerCase() === batch.currentOwner.toLowerCase();
+
+  // Start on a claim type the chosen account may actually add. A batch owner who can add no other claim
+  // (a manufacturer, say) starts on the ownership transfer.
   const allowedTypes = claimTypesFor(role);
   useEffect(() => {
     if (allowedTypes.length > 0 && !allowedTypes.includes(type)) setType(allowedTypes[0]);
+    else if (allowedTypes.length === 0 && ownsBatch) setType(ClaimType.OwnershipTransfer);
     // Only when the account (and so the role) changes, not on every choice of type.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [role]);
+  }, [role, ownsBatch]);
+
+  // Accounts that may receive the batch: an Owner or Demolisher, and not the account that sends it.
+  const recipients = deployment.accounts.filter((a) => {
+    const accountRole = roleOf(a.address);
+    return (
+      accountRole !== undefined &&
+      TRANSFER_RECIPIENT_ROLES.includes(accountRole) &&
+      a.address.toLowerCase() !== account?.address.toLowerCase()
+    );
+  });
+  useEffect(() => {
+    if (!recipients.some((a) => a.address === newOwner)) setNewOwner(recipients[0]?.address ?? "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recipients.map((a) => a.address).join(","), account?.address]);
 
   // A chosen file wins over a typed hash.
   const hash = fileHash ?? (manualHash.trim() ? manualHash.trim().toLowerCase() : null);
@@ -44,8 +69,8 @@ export function AddClaim({ id }: { id: bigint }) {
     return null;
   }, [hash]);
 
-  const permission = canAddClaim(role, type);
-  const batch = snapshot?.batches.get(id);
+  const permission = isTransfer ? canTransferBatch(account?.address, batch) : canAddClaim(role, type);
+  const transferNeedsRecipient = isTransfer && permission.allowed && !newOwner;
   const existing = hash && !hashProblem ? snapshot?.claims.get(id)?.find((c) => c.documentHash.toLowerCase() === hash) : undefined;
 
   async function chooseFile(next: File | null) {
@@ -66,7 +91,7 @@ export function AddClaim({ id }: { id: bigint }) {
   async function submit(event: FormEvent) {
     event.preventDefault();
     setFailure(null);
-    if (!hash || hashProblem || !permission.allowed) return;
+    if (!hash || hashProblem || !permission.allowed || (isTransfer && !newOwner)) return;
 
     const update = (index: number, step: Partial<Step>) =>
       setSteps((current) => current.map((s, i) => (i === index ? { ...s, ...step } : s)));
@@ -75,7 +100,9 @@ export function AddClaim({ id }: { id: bigint }) {
 
     try {
       const registry = await writer();
-      const tx = await registry.addClaim(id, type, hash);
+      // An ownership transfer is a claim too, but the contract writes it itself (system claim): it moves the
+      // batch to the new owner and records the claim in one transaction.
+      const tx = isTransfer ? await registry.transferOwnership(id, newOwner, hash) : await registry.addClaim(id, type, hash);
       const receipt = await tx.wait();
       const claimEvent = receipt?.logs
         .map((log: any) => {
@@ -92,6 +119,7 @@ export function AddClaim({ id }: { id: bigint }) {
         index: claimEvent ? Number(claimEvent.args.claimIndex) : (snapshot?.claims.get(id)?.length ?? 0),
         hash,
         tx: tx.hash,
+        newOwner: isTransfer ? newOwner : undefined,
       });
     } catch (error) {
       update(0, { state: "failed" });
@@ -120,6 +148,11 @@ export function AddClaim({ id }: { id: bigint }) {
         <h1>Claim #{added.index} toegevoegd aan batch #{id.toString()}</h1>
         <div className="result-content">
           <div>
+            {added.newOwner && (
+              <p>
+                Ownership of batch #{id.toString()} was transferred to <Address value={added.newOwner} withRole />.
+              </p>
+            )}
             <p className="instruction">
               De hash van het document ligt nu vast op de Chain. Bewaar het originele bestand goed: iedereen die het later
               wil controleren heeft precies dit bestand nodig.
@@ -139,6 +172,7 @@ export function AddClaim({ id }: { id: bigint }) {
                   setSteps([]);
                   void chooseFile(null);
                   setManualHash("");
+                  setNewOwner(recipients[0]?.address ?? "");
                 }}
               >
                 Nog een claim toevoegen
@@ -168,14 +202,44 @@ export function AddClaim({ id }: { id: bigint }) {
         <label className="field">
           <span>Claimtype *</span>
           <select value={type} onChange={(e) => setType(Number(e.target.value) as ClaimType)}>
-            {CLAIM_TYPES.map((t) => (
+            {FORM_CLAIM_TYPES.map((t) => (
               <option key={t} value={t}>
                 {CLAIM_TYPE_LABEL[t]}
               </option>
             ))}
           </select>
-          <span className="help">Can be added by: {allowedRolesLabel(type)}.</span>
+          <span className="help">
+            {isTransfer
+              ? "Can be done by: the current owner of this batch. The batch moves to the new owner you choose."
+              : `Can be added by: ${allowedRolesLabel(type)}.`}
+          </span>
         </label>
+
+        {isTransfer && (
+          <label className="field">
+            <span>New owner *</span>
+            <select value={newOwner} onChange={(e) => setNewOwner(e.target.value)} disabled={recipients.length === 0}>
+              {recipients.length === 0 && <option value="">No account available</option>}
+              {recipients.map((a) => {
+                const accountRole = roleOf(a.address);
+                return (
+                  <option key={a.address} value={a.address}>
+                    {a.name}
+                    {accountRole !== undefined ? ` (${ROLE_LABEL[accountRole]})` : ""}
+                  </option>
+                );
+              })}
+            </select>
+            <span className="help">
+              Only an account with the role Owner or Demolisher can receive a batch.
+              {batch && (
+                <>
+                  {" "}Current owner: <Address value={batch.currentOwner} withRole />.
+                </>
+              )}
+            </span>
+          </label>
+        )}
 
         <label className="field">
           <span>Document *</span>
@@ -229,8 +293,8 @@ export function AddClaim({ id }: { id: bigint }) {
       {failure && <ErrorBox error={failure} />}
 
       <div className="buttons">
-        <SubmitButton pending={pending} disabled={!permission.allowed || noHash || !!hashProblem || hashing}>
-          Claim toevoegen
+        <SubmitButton pending={pending} disabled={!permission.allowed || noHash || !!hashProblem || hashing || transferNeedsRecipient}>
+          {isTransfer ? "Transfer ownership" : "Claim toevoegen"}
         </SubmitButton>
         <a className="button" href={href.batch(id)}>
           Cancel
@@ -248,6 +312,7 @@ export function AddClaim({ id }: { id: bigint }) {
               {CLAIM_TYPE_LABEL[t]}: {allowedRolesLabel(t)}
             </li>
           ))}
+          <li>{CLAIM_TYPE_LABEL[ClaimType.OwnershipTransfer]}: the current owner of the batch</li>
         </ul>
       </details>
     </form>

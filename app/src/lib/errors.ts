@@ -6,7 +6,7 @@
  * own interface, so pass that in as `contractInterface`.
  */
 import type { Interface } from "ethers";
-import { CLAIM_TYPE_LABEL, allowedRolesLabel, type ClaimType } from "./domain";
+import { CLAIM_TYPE_LABEL, ClaimType, allowedRolesLabel } from "./domain";
 
 export interface Explained {
   message: string;
@@ -30,6 +30,9 @@ function explainCustomError(name: string, args: readonly unknown[]): string | nu
   switch (name) {
     case "NotAllowed": {
       const type = Number(args[1]) as ClaimType;
+      if (type === ClaimType.OwnershipTransfer) {
+        return "Only the current owner can transfer this batch, and only to an account with the role Owner or Demolisher.";
+      }
       if (!(type in CLAIM_TYPE_LABEL)) return "Dit account mag deze claim niet toevoegen.";
       return `Dit account mag geen ${CLAIM_TYPE_LABEL[type].toLowerCase()} toevoegen. Alleen deze rollen mogen dit: ${allowedRolesLabel(type)}.`;
     }
@@ -49,6 +52,8 @@ function explainCustomError(name: string, args: readonly unknown[]): string | nu
       return "De massa moet groter zijn dan nul.";
     case "InvalidProductionDate":
       return "De productiedatum mag niet in de toekomst liggen.";
+    case "InvalidOwner":
+      return `Invalid new owner: ${String(args[0])}.`;
     case "BatchNotFound":
       return `Batch #${String(args[0])} bestaat niet.`;
     default:

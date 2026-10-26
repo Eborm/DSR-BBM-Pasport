@@ -37,3 +37,15 @@ Run the tests:
 ```bash
 npx hardhat test
 ```
+
+## Running acceptance tests
+
+Run test:
+```bash
+npm run test:acceptance
+```
+
+View results:
+```bash
+npm run test:acceptance:report
+```

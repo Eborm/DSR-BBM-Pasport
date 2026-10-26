@@ -24,7 +24,7 @@ test.describe("Requirement 5: Betrouwbaarheid, provenance en integriteit", () =>
     await expect(page.getByText("Dit document is opgenomen in de blockchain.")).toHaveCount(0);
   });
 
-  test("Het brondocument van een nieuwe partij is vastgelegd bij de registratie", async ({ page }) => {
+  test("Het brondocument van een nieuwe batch is vastgelegd bij de registratie", async ({ page }) => {
     // Given a batch that was registered with a source document
     await chooseAccount(page, ACCOUNT.manufacturer);
     const bron = document("bim-model");

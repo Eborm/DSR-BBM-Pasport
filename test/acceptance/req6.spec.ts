@@ -55,7 +55,7 @@ test.describe("Requirement 6: Datagovernance en toegangsrechten", () => {
     await expect(page.locator("table tbody tr").first()).toBeVisible();
   });
 
-  test("Alleen de huidige eigenaar kan een partij overdragen", async ({ page }) => {
+  test("Alleen de huidige eigenaar kan een batch overdragen", async ({ page }) => {
     // Given a batch of the Manufacturer
     await chooseAccount(page, ACCOUNT.manufacturer);
     const id = await registerBatch(page);
@@ -70,7 +70,7 @@ test.describe("Requirement 6: Datagovernance en toegangsrechten", () => {
     await expect(page.getByRole("button", { name: "Transfer ownership" })).toBeDisabled();
   });
 
-  test("Een vastgelegde verklaring kan achteraf niet worden gewijzigd of verwijderd", async ({ page }) => {
+  test("Een vastgelegde claim kan achteraf niet worden gewijzigd of verwijderd", async ({ page }) => {
     // Given a batch with a registration and a quality declaration
     await chooseAccount(page, ACCOUNT.manufacturer);
     const id = await registerBatch(page);

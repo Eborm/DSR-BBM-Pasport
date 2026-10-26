@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { ACCOUNT, chooseAccount, ownerHistoryItems, registerBatch, transferBatch, timelineUrl } from "./helpers.js";
 
 test.describe("Requirement 1: Unieke identificatie en traceerbaarheid", () => {
-  test("Elke geregistreerde partij krijgt een eigen uniek ID en QR-code", async ({ page }) => {
+  test("Elke geregistreerde batch krijgt een eigen uniek ID en QR-code", async ({ page }) => {
     // Given a Manufacturer
     await chooseAccount(page, ACCOUNT.manufacturer);
 
@@ -19,7 +19,7 @@ test.describe("Requirement 1: Unieke identificatie en traceerbaarheid", () => {
     await expect(page.getByRole("link", { name: `#${second}`, exact: true })).toBeVisible();
   });
 
-  test("Het eigenaarschap van een partij is terug te volgen na een overdracht", async ({ page }) => {
+  test("Het eigenaarschap van een batch is terug te volgen na een overdracht", async ({ page }) => {
     // Given a batch that goes from the Manufacturer to the Owner
     await chooseAccount(page, ACCOUNT.manufacturer);
     const id = await registerBatch(page);

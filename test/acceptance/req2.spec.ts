@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { ACCOUNT, chooseAccount, registerBatch } from "./helpers.js";
 
 test.describe("Requirement 2: Gestandaardiseerde materiaal- en productdata", () => {
-  test("Een partij met ontbrekende verplichte velden kan niet worden geregistreerd", async ({ page }) => {
+  test("Een batch met ontbrekende verplichte velden kan niet worden geregistreerd", async ({ page }) => {
     // Given the registration form, completely empty
     await chooseAccount(page, ACCOUNT.manufacturer);
     await page.goto("/#/register");
@@ -21,7 +21,7 @@ test.describe("Requirement 2: Gestandaardiseerde materiaal- en productdata", () 
     await expect(page.getByRole("heading", { name: /geregistreerd$/ })).toHaveCount(0);
   });
 
-  test("Een geregistreerde partij legt alle gestandaardiseerde velden vast", async ({ page }) => {
+  test("Een geregistreerde batch legt alle gestandaardiseerde velden vast", async ({ page }) => {
     // Given a Manufacturer who registers a batch
     await chooseAccount(page, ACCOUNT.manufacturer);
     const id = await registerBatch(page, {

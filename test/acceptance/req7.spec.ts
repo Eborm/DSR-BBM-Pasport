@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { ACCOUNT, addClaim, chooseAccount, ownerHistoryItems, registerBatch, timelineItems, transferBatch, timelineUrl } from "./helpers.js";
 
 test.describe("Requirement 7: Levenscyclus en actualiseerbaarheid", () => {
-  test("De tijdlijn groeit mee met de hele levensloop van een partij", async ({ page }) => {
+  test("De tijdlijn groeit mee met de hele levensloop van een batch", async ({ page }) => {
     // Given a batch that goes through production, inspection, sale, placement, resale and demolition
     await chooseAccount(page, ACCOUNT.manufacturer);
     const id = await registerBatch(page);

@@ -149,6 +149,12 @@ export enum ClaimType {
  */
 export const CLAIM_TYPES: readonly ClaimType[] = [ClaimType.StatusChange, ClaimType.LocationChange, ClaimType.QualityDeclaration];
 
+/**
+ * Claim types shown on the "add claim" form. OwnershipTransfer is on the list because the form can start a
+ * transfer (it calls transferOwnership, which writes the claim); the contract still refuses it in addClaim.
+ */
+export const FORM_CLAIM_TYPES: readonly ClaimType[] = [...CLAIM_TYPES, ClaimType.OwnershipTransfer];
+
 export const CLAIM_TYPE_LABEL: Record<ClaimType, string> = {
   [ClaimType.StatusChange]: "Statuswijziging",
   [ClaimType.LocationChange]: "Locatiewijziging",
@@ -167,6 +173,15 @@ export const CLAIM_TYPE_ALLOWED: Record<ClaimType, readonly Role[]> = {
   [ClaimType.Registration]: [],
   [ClaimType.OwnershipTransfer]: [],
   [ClaimType.CircularityInfo]: [Role.Manufacturer, Role.Demolisher],
+};
+
+/** What document the hash of a claim is from. */
+export const CLAIM_DOCUMENT_LABEL: Partial<Record<ClaimType, string>> = {
+  [ClaimType.StatusChange]: "Hash van het statusdocument",
+  [ClaimType.LocationChange]: "Hash van het locatiedocument",
+  [ClaimType.QualityDeclaration]: "Hash van de kwaliteitsverklaring",
+  [ClaimType.Registration]: "Hash van het brondocument",
+  [ClaimType.OwnershipTransfer]: "Hash van het overdrachtsdocument",
 };
 
 export interface Claim {
@@ -195,13 +210,32 @@ export function canAddClaim(role: Role | null, type: ClaimType): Permission {
   return ALLOWED;
 }
 
-/** Is there any claim type this role may add at all? Used for the button on the batch screen. */
-export function canAddAnyClaim(role: Role | null): Permission {
+/**
+ * Mirrors the checks in `transferOwnership` in MaterialPassport.sol: only the current owner of the batch
+ * may transfer it. The role of the account does not matter (the manufacturer owns a batch right after registering it).
+ */
+export function canTransferBatch(address: string | null | undefined, batch: Batch | undefined): Permission {
+  if (!address) return NO_ACCOUNT;
+  if (!batch || batch.currentOwner.toLowerCase() !== address.toLowerCase()) {
+    return { allowed: false, reason: "Only the current owner of this batch can transfer it." };
+  }
+  return ALLOWED;
+}
+
+/** The new owner of a batch must be an Owner or Demolisher (see `transferOwnership`). */
+export const TRANSFER_RECIPIENT_ROLES: readonly Role[] = [Role.Owner, Role.Demolisher];
+
+/**
+ * Is there any claim this account may add? Used for the button on the batch screen.
+ * `ownsBatch` is true when the account is the current owner, who can also transfer the batch.
+ */
+export function canAddAnyClaim(role: Role | null, ownsBatch = false): Permission {
   if (role === null) return NO_ACCOUNT;
+  if (ownsBatch) return ALLOWED;
   if (!CLAIM_TYPES.some((type) => CLAIM_TYPE_ALLOWED[type].includes(role))) {
     return {
       allowed: false,
-      reason: "De rol van dit account kan geen claims toevoegen. Alleen een Owner, Inspector of Demolisher kan dit.",
+      reason: "This account cannot add claims. Only an Owner, Inspector or Demolisher can, or the current owner of the batch (to transfer it).",
     };
   }
   return ALLOWED;

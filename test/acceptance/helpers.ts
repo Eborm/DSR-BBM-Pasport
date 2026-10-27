@@ -105,3 +105,48 @@ async function openFresh(page: Page, hash: string) {
 
 export const timelineItems = (page: Page) => page.locator("ol.timeline > li");
 export const ownerHistoryItems = (page: Page) => page.locator('h2:has-text("Eigendomsgeschiedenis") + ol > li');
+
+/** Address of the open API, as another system would call it (not through the web app). */
+export const API = "http://127.0.0.1:8787/api/v1";
+
+export interface NewCircularity {
+  reusable: string;
+  recyclable: string;
+  recycled: string;
+  repairability: string;
+  residualValue: string;
+  gwp: string;
+  applications: string[];
+}
+
+export const SAMPLE_CIRCULARITY: NewCircularity = {
+  reusable: "80",
+  recyclable: "95",
+  recycled: "30",
+  repairability: "Goed repareerbaar",
+  residualValue: "1500",
+  gwp: "1.2",
+  applications: ["Hergebruik als balk", "Hergebruik als steunframe"],
+};
+
+/** Fill in the circularity form with the chosen account and wait for the confirmation. */
+export async function addCircularity(page: Page, id: bigint, values: Partial<NewCircularity> = {}) {
+  const data = { ...SAMPLE_CIRCULARITY, ...values };
+  await openFresh(page, `/#/batch/${id}/circularity`);
+  await expect(page.getByRole("heading", { name: `Circulariteitsverklaring voor batch #${id}` })).toBeVisible();
+  await page.getByLabel("Herbruikbaar zoals het is").fill(data.reusable);
+  await page.getByLabel("Recyclebaar").fill(data.recyclable);
+  await page.getByLabel("Gerecycled aandeel").fill(data.recycled);
+  await page.getByLabel("Reparatie").selectOption({ label: data.repairability });
+  await page.getByLabel("Restwaarde van de batch").fill(data.residualValue);
+  await page.getByLabel("CO₂-impact").fill(data.gwp);
+  await page.getByLabel("Mogelijke vervolgtoepassingen").fill(data.applications.join("\n"));
+  await page.getByRole("button", { name: "Verklaring toevoegen" }).click();
+  await expect(page.getByRole("heading", { name: `Circulariteitsverklaring toegevoegd aan batch #${id}` })).toBeVisible();
+}
+
+/** The circularity section on the batch page. */
+export const circularitySection = (page: Page) => page.locator('section:has(h2:text-is("Circulariteit en milieu"))');
+
+/** The value that belongs to a label in the circularity section. */
+export const circularityValue = (page: Page, label: string) => circularitySection(page).locator(`dt:text-is("${label}") + dd`);

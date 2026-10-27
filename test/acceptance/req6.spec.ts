@@ -93,4 +93,34 @@ test.describe("Requirement 6: Datagovernance en toegangsrechten", () => {
     // And there is no button to change or delete a claim
     await expect(page.getByRole("button", { name: /wijzig|verwijder|bewerk|delete|edit/i })).toHaveCount(0);
   });
+
+  test("Alleen een Manufacturer of Demolisher mag circulariteitsgegevens toevoegen", async ({ page }) => {
+    // Given an existing batch
+    await chooseAccount(page, ACCOUNT.manufacturer);
+    const id = await registerBatch(page);
+    const addButton = page.getByRole("button", { name: "Circulariteitsgegevens toevoegen" });
+
+    // Then the Manufacturer and the Demolisher can add data
+    await page.goto(`/#/batch/${id}`);
+    await expect(addButton).toBeEnabled();
+    await chooseAccount(page, ACCOUNT.demolisher);
+    await page.goto(`/#/batch/${id}`);
+    await expect(addButton).toBeEnabled();
+
+    // But an Inspector cannot, and gets an explanation on the form
+    await chooseAccount(page, ACCOUNT.inspector);
+    await page.goto(`/#/batch/${id}`);
+    await expect(addButton).toBeDisabled();
+    await page.goto(`/#/batch/${id}/circularity`);
+    await expect(page.getByRole("note")).toContainText("Een circulariteitsverklaring kan alleen worden toegevoegd door: Manufacturer or Demolisher.");
+    await expect(page.getByRole("button", { name: "Verklaring toevoegen" })).toBeDisabled();
+
+    // And neither can an Owner or an account without a role
+    await chooseAccount(page, ACCOUNT.owner);
+    await page.goto(`/#/batch/${id}`);
+    await expect(addButton).toBeDisabled();
+    await chooseAccount(page, ACCOUNT.admin);
+    await page.goto(`/#/batch/${id}`);
+    await expect(addButton).toBeDisabled();
+  });
 });

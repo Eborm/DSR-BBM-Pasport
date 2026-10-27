@@ -5,7 +5,9 @@
   "scripts": {
     "demo": "tsx scripts/start-demo.ts",
     "test:acceptance": "playwright test",
-    "test:acceptance:report": "playwright show-report acceptance-report"
+    "test:acceptance:report": "playwright show-report acceptance-report",
+    "api": "tsx server/api.ts",
+    "typecheck": "tsc -p app/tsconfig.json && tsc -p server/tsconfig.json"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^4.1.0",

@@ -2,7 +2,8 @@
  * Starts the whole demo with one command:
  *   1. local Hardhat chain
  *   2. deploy MaterialPassport, assign roles, place sample data
- *   3. the web application (Vite)
+ *   3. the API and document store (server/api.ts)
+ *   4. the web application (Vite)
  *
  *   npm run demo        (Ctrl+C stops everything)
  *
@@ -14,8 +15,10 @@ import { mkdir, rm } from "node:fs/promises";
 
 const HARDHAT = "node_modules/hardhat/dist/src/cli.js";
 const VITE = "node_modules/vite/bin/vite.js";
+const TSX = "node_modules/tsx/dist/cli.mjs";
 const RPC_URL = "http://127.0.0.1:8545";
 const APP_URL = "http://localhost:5173";
+const API_URL = "http://127.0.0.1:8787/api/v1/openapi.json";
 
 const children: ChildProcess[] = [];
 let stopping = false;
@@ -83,21 +86,26 @@ if (await isReachable(RPC_URL, rpc)) {
 await rm("app/public/deployment.json", { force: true });
 await mkdir(".demo", { recursive: true });
 
-console.log("1/3  Starting local chain...");
+console.log("1/4  Starting local chain...");
 start("The chain", [HARDHAT, "node"], ".demo/chain.log");
 await waitFor("The chain", RPC_URL, rpc);
 
-console.log("2/3  Deploying contract and placing demo data...");
+console.log("2/4  Deploying contract and placing demo data...");
 const seed = spawnSync(process.execPath, [HARDHAT, "run", "scripts/demo-data.ts", "--network", "localhost"], {
   stdio: "inherit",
 });
 if (seed.status !== 0) stop(1);
 
-console.log("3/3  Starting web application...\n");
+console.log("3/4  Starting API and document store...");
+start("The API", [TSX, "server/api.ts"], ".demo/api.log");
+await waitFor("The API", API_URL);
+
+console.log("4/4  Starting web application...\n");
 start("The web application", [VITE, "--config", "app/vite.config.ts"]);
 await waitFor("The web application", APP_URL);
 
 console.log(`
   Demo running at ${APP_URL}
+  API at http://127.0.0.1:8787/api/v1 (description: /api/v1/openapi.json)
   Stop: Ctrl+C
 `);

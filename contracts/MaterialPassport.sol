@@ -40,7 +40,10 @@ contract MaterialPassport {
         LocationChange, 
         QualityDeclaration,
         Registration,
-        OwnershipTransfer
+        OwnershipTransfer,
+        // Hash of an off-chain circularity and environmental declaration (requirement 3).
+        // Added last so the numbers of the existing types stay the same.
+        CircularityInfo
     }
 
     // Structs
@@ -129,6 +132,10 @@ contract MaterialPassport {
         else if (claimType == ClaimType.LocationChange) {
             if (role != Role.Owner) revert NotAllowed(msg.sender, claimType);
         } 
+        else if (claimType == ClaimType.CircularityInfo) {
+            // The producer declares the circularity data, the demolisher updates it after assessing the material.
+            if (role != Role.Manufacturer && role != Role.Demolisher) revert NotAllowed(msg.sender, claimType);
+        }
         else if (claimType == ClaimType.Registration || claimType == ClaimType.OwnershipTransfer) {
             // System claims can never be added by hand, only via registerBatch and transferOwnership.
             revert NotAllowed(msg.sender, claimType);

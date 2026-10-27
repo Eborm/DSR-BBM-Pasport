@@ -208,6 +208,7 @@ export function AddClaim({ id }: { id: bigint }) {
               </option>
             ))}
           </select>
+          <span className="help">Kan worden toegevoegd door: {allowedRolesLabel(type)}.</span>
           <span className="help">
             {isTransfer
               ? "Can be done by: the current owner of this batch. The batch moves to the new owner you choose."
@@ -253,7 +254,7 @@ export function AddClaim({ id }: { id: bigint }) {
         {hashError && <p className="field-error">{hashError}</p>}
         {fileHash && file && (
           <div className="computed-hash">
-            <p className="muted">Hash of {file.name} (keccak256)</p>
+            <p className="muted">Hash van {file.name} (keccak256)</p>
             <HashValue value={fileHash} full />
           </div>
         )}
@@ -283,8 +284,8 @@ export function AddClaim({ id }: { id: bigint }) {
 
         {existing && (
           <p className="warning" role="note">
-            This document is already recorded as claim #{existing.index} ({CLAIM_TYPE_LABEL[existing.claimType].toLowerCase()}) on this
-            batch. You can record it again, but claims cannot be changed or removed.
+            Dit document is al vastgelegd als claim #{existing.index} ({CLAIM_TYPE_LABEL[existing.claimType].toLowerCase()}) bij deze
+            batch. Je kunt het opnieuw vastleggen, maar claims kunnen niet worden gewijzigd of verwijderd.
           </p>
         )}
       </fieldset>
@@ -297,7 +298,7 @@ export function AddClaim({ id }: { id: bigint }) {
           {isTransfer ? "Transfer ownership" : "Claim toevoegen"}
         </SubmitButton>
         <a className="button" href={href.batch(id)}>
-          Cancel
+          Annuleren
         </a>
       </div>
       {permission.allowed && noHash && !hashing && (

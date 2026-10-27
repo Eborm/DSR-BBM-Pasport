@@ -138,9 +138,15 @@ export enum ClaimType {
   Registration,
   /** Written by MaterialPassport when ownership of a batch is transferred; nobody can add it by hand. */
   OwnershipTransfer,
+  /** Hash of an off-chain circularity and environmental declaration (requirement 3). Added last: the numbers of the other types must not change. */
+  CircularityInfo,
 }
 
-/** The claim types a user can add by hand. Registration and OwnershipTransfer are written by the contract itself. */
+/**
+ * The claim types a user can add by hand with any document (the "Add claim" screen).
+ * Registration and OwnershipTransfer are written by the contract itself, and
+ * CircularityInfo has its own screen, because its document is built from a form.
+ */
 export const CLAIM_TYPES: readonly ClaimType[] = [ClaimType.StatusChange, ClaimType.LocationChange, ClaimType.QualityDeclaration];
 
 /**
@@ -155,6 +161,7 @@ export const CLAIM_TYPE_LABEL: Record<ClaimType, string> = {
   [ClaimType.QualityDeclaration]: "Kwaliteitsverklaring",
   [ClaimType.Registration]: "Registratie",
   [ClaimType.OwnershipTransfer]: "Eigendom overdracht",
+  [ClaimType.CircularityInfo]: "Circulariteitsverklaring",
 };
 
 /** Mirrors the `mayClaim` modifier in MaterialPassport.sol: who may add which type of claim. */
@@ -165,6 +172,7 @@ export const CLAIM_TYPE_ALLOWED: Record<ClaimType, readonly Role[]> = {
   // Only MaterialPassport itself can write these (see registerBatch and transferOwnership).
   [ClaimType.Registration]: [],
   [ClaimType.OwnershipTransfer]: [],
+  [ClaimType.CircularityInfo]: [Role.Manufacturer, Role.Demolisher],
 };
 
 /** What document the hash of a claim is from. */
@@ -237,3 +245,15 @@ export const claimTypesFor = (role: Role | null) =>
   role === null ? [] : CLAIM_TYPES.filter((type) => CLAIM_TYPE_ALLOWED[type].includes(role));
 
 export const allowedRolesLabel = allowedLabels;
+
+/** Mirrors the `mayClaim` modifier for CircularityInfo; used by the circularity screen. */
+export function canAddCircularity(role: Role | null): Permission {
+  if (role === null) return NO_ACCOUNT;
+  if (!CLAIM_TYPE_ALLOWED[ClaimType.CircularityInfo].includes(role)) {
+    return {
+      allowed: false,
+      reason: `Een circulariteitsverklaring kan alleen worden toegevoegd door: ${allowedLabels(ClaimType.CircularityInfo)}.`,
+    };
+  }
+  return ALLOWED;
+}

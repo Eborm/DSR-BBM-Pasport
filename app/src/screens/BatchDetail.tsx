@@ -1,5 +1,14 @@
+import { CircularityPanel } from "../components/CircularityPanel";
 import { ActionButton, Address, HashValue, RoleBadge } from "../components/ui";
-import { CLAIM_TYPE_LABEL, CLASSIFICATION_LABEL, LEVEL_LABEL, SOURCE_FILE_LABEL, canAddAnyClaim } from "../lib/domain";
+import { apiUrl } from "../lib/api";
+import {
+  CLAIM_TYPE_LABEL,
+  CLASSIFICATION_LABEL,
+  LEVEL_LABEL,
+  SOURCE_FILE_LABEL,
+  canAddAnyClaim,
+  canAddCircularity,
+} from "../lib/domain";
 import { formatDateTime } from "../lib/format";
 import { href, navigate } from "../lib/router";
 import { usePassport } from "../state";
@@ -70,6 +79,37 @@ export function BatchDetail({ id }: { id: bigint }) {
         <dt>Geregistreerd op</dt>
         <dd>{formatDateTime(batch.registeredAt)}</dd>
       </dl>
+
+      <section>
+        <div className="heading-row">
+          <h2>Circulariteit en milieu</h2>
+          <ActionButton permission={canAddCircularity(role)} onClick={() => navigate(href.circularity(batch.id))}>
+            Circulariteitsgegevens toevoegen
+          </ActionButton>
+        </div>
+        <CircularityPanel claims={list} />
+      </section>
+
+      <section>
+        <h2>Open data</h2>
+        <p className="muted">
+          Dezelfde gegevens zijn voor andere systemen beschikbaar via de open API (alleen lezen, geen account nodig).
+        </p>
+        <ul>
+          <li>
+            <a href={apiUrl.batch(batch.id)}>Batch als JSON</a>
+          </li>
+          <li>
+            <a href={apiUrl.batchJsonLd(batch.id)}>Batch als JSON-LD (schema.org)</a>
+          </li>
+          <li>
+            <a href={apiUrl.claims(batch.id)}>Tijdlijn als JSON</a>
+          </li>
+          <li>
+            <a href={apiUrl.openApi()}>API-beschrijving (OpenAPI 3.1)</a>
+          </li>
+        </ul>
+      </section>
 
       <section>
         <h2>Claims</h2>

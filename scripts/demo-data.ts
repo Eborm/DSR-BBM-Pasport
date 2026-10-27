@@ -10,6 +10,7 @@
  */
 import { network } from "hardhat";
 import { writeFile, mkdir, readFile } from "node:fs/promises";
+import { DECLARATION_SCHEMA, declarationBytes, hashBytes, type CircularityDeclaration } from "../app/src/lib/circularity";
 
 const { ethers } = await network.connect({ network: "localhost" });
 
@@ -51,6 +52,41 @@ async function main() {
   await (await registry.connect(inspector).addClaim(1, 2 /* QualityDeclaration */, ethers.keccak256(report))).wait();
   await (await registry.connect(owner).addClaim(1, 1 /* LocationChange */, hashOf("Transport document to construction site Heerlen"))).wait();
   await (await registry.connect(inspector).addClaim(2, 2 /* QualityDeclaration */, hashOf("Inspection report hollow-core slab C45/55"))).wait();
+
+  console.log("Adding circularity declarations...");
+  // The declarations go to the off-chain document store (the same folder server/api.ts serves from);
+  // only their hashes go on the chain. The values are made up for the demo.
+  const declarations: CircularityDeclaration[] = [
+    {
+      schema: DECLARATION_SCHEMA,
+      batchId: "1",
+      reusablePercent: 90,
+      recyclablePercent: 98,
+      repairability: "good",
+      recycledContentPercent: 85,
+      residualValueEur: 2500,
+      nextApplications: ["Reuse as a structural beam in a new building", "Reuse as a support frame"],
+      environment: { gwpA1A3KgCo2ePerKg: 0.85 },
+    },
+    {
+      schema: DECLARATION_SCHEMA,
+      batchId: "2",
+      reusablePercent: 70,
+      recyclablePercent: 95,
+      repairability: "limited",
+      recycledContentPercent: 5,
+      residualValueEur: 3000,
+      nextApplications: ["Reuse as a floor slab", "Crushed aggregate for road foundations"],
+      environment: { gwpA1A3KgCo2ePerKg: 0.16 },
+    },
+  ];
+  await mkdir(".demo/documents", { recursive: true });
+  for (const declaration of declarations) {
+    const bytes = declarationBytes(declaration);
+    const hash = hashBytes(bytes);
+    await writeFile(`.demo/documents/${hash}`, bytes);
+    await (await registry.connect(manufacturer).addClaim(BigInt(declaration.batchId), 5 /* CircularityInfo */, hash)).wait();
+  }
 
   const accounts = [
     { address: admin.address, name: "Administrator", role: "Admin" },

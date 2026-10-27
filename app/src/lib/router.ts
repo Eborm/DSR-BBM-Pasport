@@ -5,6 +5,7 @@ export type Route =
   | { screen: "overview" }
   | { screen: "batch"; id: bigint }
   | { screen: "claim"; id: bigint }
+  | { screen: "circularity"; id: bigint }
   | { screen: "transfer"; id: bigint; mode: "transfer" | "split" }
   | { screen: "register" }
   | { screen: "scan" }
@@ -29,6 +30,7 @@ export function parseRoute(hash: string): Route {
     case "batch":
       if (id === undefined) return { screen: "unknown" };
       if (parts[2] === "claim") return { screen: "claim", id };
+      if (parts[2] === "circularity") return { screen: "circularity", id };
       if (parts[2] === "transfer" || parts[2] === "split") return { screen: "transfer", id, mode: parts[2] };
       return { screen: "batch", id };
     default:
@@ -40,6 +42,7 @@ export const href = {
   overview: () => "#/",
   batch: (id: bigint) => `#/batch/${id}`,
   claim: (id: bigint) => `#/batch/${id}/claim`,
+  circularity: (id: bigint) => `#/batch/${id}/circularity`,
   transfer: (id: bigint) => `#/batch/${id}/transfer`,
   split: (id: bigint) => `#/batch/${id}/split`,
   register: () => "#/register",

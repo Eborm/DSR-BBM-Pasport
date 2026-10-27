@@ -260,7 +260,7 @@ export function Register() {
         </label>
 
         <label className="field">
-          <span>Source document *</span>
+          <span>Brondocument *</span>
           <input
             type="file"
             onChange={(e) => void chooseFile(e.target.files?.[0] ?? null)}
@@ -273,11 +273,11 @@ export function Register() {
           {errors.document && <span className="field-error" id="error-document">{errors.document}</span>}
         </label>
 
-        {hashing && <p className="muted">Calculating hash…</p>}
+        {hashing && <p className="muted">Hash wordt berekend…</p>}
         {hashError && <p className="field-error">{hashError}</p>}
         {fileHash && file && (
           <div className="computed-hash">
-            <p className="muted">Hash of {file.name} (keccak256)</p>
+            <p className="muted">Hash van {file.name} (keccak256)</p>
             <HashValue value={fileHash} full />
           </div>
         )}

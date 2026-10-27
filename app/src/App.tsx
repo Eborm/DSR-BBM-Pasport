@@ -3,6 +3,7 @@ import { NotImplemented, RoleBadge } from "./components/ui";
 import { loadDeployment, type Deployment } from "./lib/chain";
 import { shortAddress } from "./lib/format";
 import { href, parseRoute, useHash } from "./lib/router";
+import { AddCircularity } from "./screens/AddCircularity";
 import { AddClaim } from "./screens/AddClaim";
 import { BatchDetail } from "./screens/BatchDetail";
 import { Chain } from "./screens/Chain";
@@ -43,7 +44,7 @@ function Layout() {
   }, [hash]);
 
   const active = (screen: string) =>
-    route.screen === screen || (screen === "overview" && ["batch", "claim", "transfer", "register"].includes(route.screen))
+    route.screen === screen || (screen === "overview" && ["batch", "claim", "circularity", "transfer", "register"].includes(route.screen))
       ? "page"
       : undefined;
 
@@ -113,6 +114,8 @@ function Screen({ route }: { route: ReturnType<typeof parseRoute> }) {
       return <BatchDetail key={route.id.toString()} id={route.id} />;
     case "claim":
       return <AddClaim key={route.id.toString()} id={route.id} />;
+    case "circularity":
+      return <AddCircularity key={route.id.toString()} id={route.id} />;
     case "transfer":
       return <NotImplemented what={route.mode === "split" ? "Split batch" : "Transfer ownership"} />;
     case "register":

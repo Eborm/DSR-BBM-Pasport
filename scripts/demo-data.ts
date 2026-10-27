@@ -10,7 +10,7 @@
  */
 import { network } from "hardhat";
 import { writeFile, mkdir, readFile } from "node:fs/promises";
-import { DECLARATION_SCHEMA, declarationBytes, hashBytes, type CircularityDeclaration } from "../app/src/lib/circularity";
+import { DECLARATION_SCHEMA, declarationBytes, hashBytes, type CircularityDeclaration } from "../app/src/lib/circularity.js";
 
 const { ethers } = await network.connect({ network: "localhost" });
 

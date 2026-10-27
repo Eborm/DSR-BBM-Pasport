@@ -42,7 +42,7 @@ export function CircularityPanel({ claims }: { claims: Claim[] }) {
       <>
         <p role="status">✓ De opgeslagen verklaring komt overeen met de hash op de Chain.</p>
         {recorded}
-        <dl className="details">
+        <dl className="attributes">
           <dt>Herbruikbaar zoals het is</dt>
           <dd>{d.reusablePercent}%</dd>
           <dt>Recyclebaar</dt>

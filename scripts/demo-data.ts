@@ -11,7 +11,7 @@
 import { network } from "hardhat";
 import { writeFile, mkdir, readFile } from "node:fs/promises";
 
-const { ethers } = await network.connect({ network: "localhost" });
+const { ethers } = await network.create({ network: "localhost" });
 
 const ROLE_NAMES = ["Viewer", "Manufacturer", "Inspector", "Owner", "Demolisher"] as const;
 

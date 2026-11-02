@@ -38,6 +38,18 @@ Run the tests:
 npx hardhat test
 ```
 
+## Running acceptance tests
+
+Run test:
+```bash
+npm run test:acceptance
+```
+
+View results:
+```bash
+npm run test:acceptance:report
+```
+
 ## Demo, API and open data
 
 Start everything (local chain, demo data, API and web app) with one command:

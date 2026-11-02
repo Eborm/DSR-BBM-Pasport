@@ -20,6 +20,10 @@ types/
 app/public/deployment.json
 *.tsbuildinfo
 
+# Test results
+acceptance-report/
+test-results/
+
 # Node modules
 /node_modules
 

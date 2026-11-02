@@ -12,7 +12,7 @@ import { network } from "hardhat";
 import { writeFile, mkdir, readFile } from "node:fs/promises";
 import { DECLARATION_SCHEMA, declarationBytes, hashBytes, type CircularityDeclaration } from "../app/src/lib/circularity.js";
 
-const { ethers } = await network.connect({ network: "localhost" });
+const { ethers } = await network.create({ network: "localhost" });
 
 const ROLE_NAMES = ["Viewer", "Manufacturer", "Inspector", "Owner", "Demolisher"] as const;
 

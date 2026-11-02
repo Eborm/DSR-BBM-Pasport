@@ -70,12 +70,6 @@ function Layout() {
           <a href={href.overview()} aria-current={active("overview")}>
             Overzicht
           </a>
-          <a href={href.register()} aria-current={active("register")}>
-            Registreren
-          </a>
-          <a href={href.scan()} aria-current={active("scan")}>
-            Scannen
-          </a>
           <a href={href.verify()} aria-current={active("verify")}>
             Controleren
           </a>
@@ -121,8 +115,6 @@ function Screen({ route }: { route: ReturnType<typeof parseRoute> }) {
       return <NotImplemented what={route.mode === "split" ? "Split batch" : "Transfer ownership"} />;
     case "register":
       return <Register />;
-    case "scan":
-      return <NotImplemented what="Scan QR code" />;
     case "verify":
       return <Verify key={route.id?.toString() ?? "all"} id={route.id} />;
     case "chain":

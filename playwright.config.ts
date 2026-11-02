@@ -6,7 +6,7 @@ import { defineConfig } from "@playwright/test";
  * chain starts clean on every run. Stop a running demo first, otherwise port 8545 is in use.
  */
 export default defineConfig({
-  testDir: "./test/acceptance",
+  testDir: "./acceptance",
   // All scenarios share one chain, so they run one after another.
   fullyParallel: false,
   workers: 1,

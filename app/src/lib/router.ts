@@ -8,7 +8,6 @@ export type Route =
   | { screen: "circularity"; id: bigint }
   | { screen: "transfer"; id: bigint; mode: "transfer" | "split" }
   | { screen: "register" }
-  | { screen: "scan" }
   | { screen: "verify"; id?: bigint }
   | { screen: "chain"; block?: number }
   | { screen: "timeline"; id: bigint }
@@ -22,8 +21,6 @@ export function parseRoute(hash: string): Route {
       return { screen: "overview" };
     case "register":
       return { screen: "register" };
-    case "scan":
-      return { screen: "scan" };
     case "verify":
       return { screen: "verify", id };
     case "chain":
@@ -50,7 +47,6 @@ export const href = {
   transfer: (id: bigint) => `#/batch/${id}/transfer`,
   split: (id: bigint) => `#/batch/${id}/split`,
   register: () => "#/register",
-  scan: () => "#/scan",
   verify: (id?: bigint) => (id === undefined ? "#/verify" : `#/verify/${id}`),
   chain: (block?: number) => (block === undefined ? "#/chain" : `#/chain/${block}`),
   timeline: (id: bigint) => `#/timeline/${id}`,
